@@ -5,7 +5,8 @@ import wx
 
 import Frame1
 
-modules ={'Frame1': [1, 'Main frame of Application', 'Frame1.py']}
+modules ={'Frame1': [1, 'Main frame of Application', 'Frame1.py'],
+ 'module1': [0, '', 'module1.py']}
 
 class BoaApp(wx.App):
     def OnInit(self):
