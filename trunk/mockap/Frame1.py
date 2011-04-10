@@ -47,7 +47,8 @@ class Frame1(wx.Frame):
         self.obj_brows = module1.Obj_browser()
 
     def OnButton1Button(self, event):
-        pass
+        handle = self.treeCtrl1.GetItemData(self.treeCtrl1.GetSelection()).GetData()['handle']
+        self.textCtrl1.AppendText(str(self.obj_brows.get_children_list(handle)))
 
     def OnButton2Button(self, event):        
         proc_list = self.obj_brows.get_process()
@@ -60,7 +61,14 @@ class Frame1(wx.Frame):
 
 
     def OnTreeCtrl1TreeItemRightClick(self, event):
-        self.textCtrl1.AppendText(str(self.treeCtrl1.GetItemData(self.treeCtrl1.GetSelection()).GetData()))
+#        self.textCtrl1.AppendText(str(self.treeCtrl1.GetItemData(self.treeCtrl1.GetSelection()).GetData()))
+ #       self.textCtrl1.AppendText(str(self.treeCtrl1.GetItemData(event.GetItem()).GetData()))
+        tree_item = event.GetItem()
+        handle = self.treeCtrl1.GetItemData(tree_item).GetData()['handle']
+        children = self.obj_brows.get_children_list(handle)        
+        self.treeCtrl1.DeleteChildren(tree_item)
+        for child in children:
+            self.treeCtrl1.AppendItem(tree_item,'%s - %.40s' % (str(child['wrap_name']),str(child['texts'])))
 
     def OnFrame1Close(self, event):
         del self.obj_brows
