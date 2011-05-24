@@ -40,5 +40,7 @@ class Obj_browser():
             children_list.append({'wrap_name':str_type, 'texts':texts}) 
         return children_list
             
+    def get_properties(self, handle):
+        pass
         
     
