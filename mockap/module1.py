@@ -41,7 +41,11 @@ class Obj_browser():
         return children_list
             
     def get_properties(self, handle):
+        text = ''
         ctrl = pywinauto.controls.HwndWrapper.HwndWrapper(handle)
-        return ctrl.GetProperties()
+        properties = ctrl.GetProperties()
+        for key in properties.keys():
+            text += '{0:30}\t{1:*^1}\t{2:30}\n'.format(key, ':',str(properties[key]))
+        return text
         
     
