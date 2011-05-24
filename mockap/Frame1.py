@@ -79,12 +79,13 @@ class Frame1(wx.Frame):
             self.treeCtrl1.DeleteChildren(tree_item) #clear old
             for child in children:
                 item_data = wx.TreeItemData()
-                item_data.SetData({'type' : 'ctrl', 'data' : {'ctrl_id':0}})
+                item_data.SetData({'type' : 'ctrl', 'data' : {'ctrl_handle':child['handle']}})
                 self.treeCtrl1.AppendItem(tree_item,'%s - %.40s' % (str(child['wrap_name']),str(child['texts'])),data = item_data)
         else:
-            ctrl_id = self.treeCtrl1.GetItemData(tree_item).GetData()['data']['ctrl_id']
-            prnt_handle = self.treeCtrl1.GetItemData(self.treeCtrl1.GetItemParent(tree_item)).GetData()['data']['handle']
-            self.textCtrl1.AppendText(str((prnt_handle, ctrl_id)))
+            ctrl_handle = self.treeCtrl1.GetItemData(tree_item).GetData()['data']['ctrl_handle']
+            #prnt_handle = self.treeCtrl1.GetItemData(self.treeCtrl1.GetItemParent(tree_item)).GetData()['data']['handle']
+            properties = self.obj_brows.get_properties(ctrl_handle)
+            self.textCtrl1.AppendText(str(properties))
 
     def OnFrame1Close(self, event):
         del self.obj_brows

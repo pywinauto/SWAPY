@@ -37,10 +37,11 @@ class Obj_browser():
         for child in window.Children():
             str_type = str(type(child)).split("'")[-2].split('.')[-1] #return wrapper name of control
             texts = child.Texts()
-            children_list.append({'wrap_name':str_type, 'texts':texts}) 
+            children_list.append({'wrap_name':str_type, 'texts':texts, 'handle':child.handle}) 
         return children_list
             
     def get_properties(self, handle):
-        pass
+        ctrl = pywinauto.controls.HwndWrapper.HwndWrapper(handle)
+        return ctrl.GetProperties()
         
     
