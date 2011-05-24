@@ -34,7 +34,7 @@ class Frame1(wx.Frame):
 
         self.textCtrl1 = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL1, name='textCtrl1',
               parent=self, pos=wx.Point(384, 16), size=wx.Size(416, 392),
-              style=0, value='textCtrl1')
+              style=wx.TE_MULTILINE, value='textCtrl1')
 
         self.button2 = wx.Button(id=wxID_FRAME1BUTTON2, label='button2',
               name='button2', parent=self, pos=wx.Point(288, 56),
