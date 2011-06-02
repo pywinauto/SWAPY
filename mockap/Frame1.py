@@ -85,7 +85,7 @@ class Frame1(wx.Frame):
             ctrl_handle = self.treeCtrl1.GetItemData(tree_item).GetData()['data']['ctrl_handle']
             #prnt_handle = self.treeCtrl1.GetItemData(self.treeCtrl1.GetItemParent(tree_item)).GetData()['data']['handle']
             properties = self.obj_brows.get_properties(ctrl_handle)
-            self.textCtrl1.AppendText(str(properties))
+            self.staticText1.SetLabel(str(properties))
 
     def OnFrame1Close(self, event):
         del self.obj_brows
