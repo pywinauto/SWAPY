@@ -4,6 +4,11 @@ import pywinauto
 proxy module for pywinauto 
 '''
 
+ACTIONS =  {101 : 'Close',
+            102 : 'Click',
+            }
+
+
 def test():
     return '1'
 
@@ -41,3 +46,22 @@ def _get_subitems(pywin_obj):
             c_name = 'Unknow control name!'
         subitems.append((c_name, control))
     return subitems
+
+def _get_actions(pywin_obj):
+    '''
+    return allowed actions for this object. [(id,action_name),...]
+    '''
+    allowed_actions = []
+    try:
+        obj_actions = dir(pywin_obj.WrapperObject())
+    except:
+        obj_actions = dir(pywin_obj)
+    for id, action in ACTIONS.items():
+        if action in obj_actions:
+            allowed_actions.append((id,action))
+    return allowed_actions
+            
+def exec_action(pywin_obj, action_id):
+    action = ACTIONS[action_id]
+    exec('pywin_obj.'+action+'()')
+    return 0
