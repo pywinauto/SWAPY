@@ -35,6 +35,7 @@ class Frame1(wx.Frame):
         self.textCtrl1 = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL1, name='textCtrl1',
               parent=self, pos=wx.Point(384, 16), size=wx.Size(416, 392),
               style=wx.TE_MULTILINE, value='textCtrl1')
+        
 
         self.button2 = wx.Button(id=wxID_FRAME1BUTTON2, label='button2',
               name='button2', parent=self, pos=wx.Point(288, 56),
@@ -45,10 +46,27 @@ class Frame1(wx.Frame):
         self.staticText1 = wx.StaticText(id=wxID_FRAME1STATICTEXT1,
               label='staticText1', name='staticText1', parent=self,
               pos=wx.Point(16, 408), size=wx.Size(256, 128), style=0)
+        self.staticText1.Bind(wx.EVT_RIGHT_DCLICK, self.right_dclick)
+        self.Bind(wx.EVT_MENU, self.test)
 
     def __init__(self, parent):
         self._init_ctrls(parent)
         self.obj_brows = module1.Obj_browser()
+    
+    def right_dclick(self, event):
+        menu = wx.Menu()
+     
+        menu.Append(1, '1')
+        menu.Append(2, '2')
+        menu.Append(3, '3')
+     
+        self.PopupMenu(menu)
+     
+        menu.Destroy()
+    
+    def test(self, event):
+        #print str(dir(event))
+        print event.Id
 
     def OnButton1Button(self, event):
         item_type = self.treeCtrl1.GetItemData(self.treeCtrl1.GetSelection()).GetData()['type']

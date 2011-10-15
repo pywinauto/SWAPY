@@ -41,6 +41,8 @@ class Frame1(wx.Frame):
               size=wx.Size(330, 570), style=wx.TR_HAS_BUTTONS)
         self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
               self.OnTreeCtrl1TreeItemRightClick, id=wxID_FRAME1TREECTRL_OBJECTSBROWSER)
+        self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_RIGHT_DCLICK, self.ObjectsBrowserRight_DClick)
+        self.Bind(wx.EVT_MENU, self.make_action) # - make action
         #self.treeCtrl_ObjectsBrowser.SetLabel('Shows windows, controls hierarchy')
 
         self.textCtrl_Editor = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL_EDITOR,
@@ -70,7 +72,21 @@ class Frame1(wx.Frame):
         tree_item = event.GetItem()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         self._set_prorerties(obj)
-        self._add_subitems(tree_item, obj)
+        self._add_subitems(tree_item, obj)        
+                    
+    def ObjectsBrowserRight_DClick(self, event):
+        menu = wx.Menu()
+        tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
+        obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+        for id, action_name in proxy._get_actions(obj):
+            menu.Append(id, action_name)
+        self.PopupMenu(menu)     
+        menu.Destroy() 
+        
+    def make_action(self, event):
+        tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
+        obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+        proxy.exec_action(obj, event.Id)
         
     def _refresh_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
@@ -96,4 +112,5 @@ class Frame1(wx.Frame):
         for i_name, i_obj in subitems:
             item_data = wx.TreeItemData()
             item_data.SetData(i_obj)
-            self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)    
+            self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)   
+
