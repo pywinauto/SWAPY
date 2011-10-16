@@ -39,9 +39,9 @@ class Frame1(wx.Frame):
         self.treeCtrl_ObjectsBrowser = wx.TreeCtrl(id=wxID_FRAME1TREECTRL_OBJECTSBROWSER,
               name='treeCtrl_ObjectsBrowser', parent=self, pos=wx.Point(10, 20),
               size=wx.Size(330, 570), style=wx.TR_HAS_BUTTONS)
-        self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK,
-              self.OnTreeCtrl1TreeItemRightClick, id=wxID_FRAME1TREECTRL_OBJECTSBROWSER)
-        self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_RIGHT_DCLICK, self.ObjectsBrowserRight_DClick)
+        self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_SEL_CHANGED,
+              self.OnTreeCtrl1TreeSelChanged, id=wxID_FRAME1TREECTRL_OBJECTSBROWSER)
+        self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.ObjectsBrowserRight_Click)
         self.Bind(wx.EVT_MENU, self.make_action) # - make action
         #self.treeCtrl_ObjectsBrowser.SetLabel('Shows windows, controls hierarchy')
 
@@ -68,15 +68,17 @@ class Frame1(wx.Frame):
         print('test')
         self._refresh_windows_tree()
         
-    def OnTreeCtrl1TreeItemRightClick(self, event):
+    def OnTreeCtrl1TreeSelChanged(self, event):
         tree_item = event.GetItem()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         self._set_prorerties(obj)
         self._add_subitems(tree_item, obj)        
                     
-    def ObjectsBrowserRight_DClick(self, event):
+    def ObjectsBrowserRight_Click(self, event):
         menu = wx.Menu()
-        tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
+        #tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
+        tree_item = event.GetItem()
+        self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         for id, action_name in proxy._get_actions(obj):
             menu.Append(id, action_name)
