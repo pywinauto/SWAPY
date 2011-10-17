@@ -104,7 +104,9 @@ class Frame1(wx.Frame):
     def _set_prorerties(self, obj):
         self.listBox_Properties.Clear()        
         properties = proxy._get_properties(obj)
-        for p_name in properties.keys():
+        param_names = properties.keys()
+        param_names.sort(key=lambda name: name.lower())
+        for p_name in param_names:
             item = '{0:30} {1:*^1} {2:30}'.format(p_name, ':',str(properties[p_name]))
             self.listBox_Properties.Append(item)
         

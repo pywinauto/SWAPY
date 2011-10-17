@@ -5,7 +5,7 @@ proxy module for pywinauto
 '''
 
 ACTIONS =  {101 : 'Close',
-            102 : 'Click',
+            102 : 'Click'
             }
 
 
@@ -25,6 +25,7 @@ def _get_windows():
         if not title:
             title = 'Unknow title!'
         windows.append((title, wind))
+    windows.sort(key=lambda name: name[0].lower())
     return windows
 
 def _get_properties(pywin_obj):
@@ -56,9 +57,11 @@ def _get_actions(pywin_obj):
         obj_actions = dir(pywin_obj.WrapperObject())
     except:
         obj_actions = dir(pywin_obj)
+    #print obj_actions
     for id, action in ACTIONS.items():
         if action in obj_actions:
             allowed_actions.append((id,action))
+    allowed_actions.sort(key=lambda name: name[1].lower())
     return allowed_actions
             
 def exec_action(pywin_obj, action_id):
