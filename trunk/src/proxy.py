@@ -39,6 +39,27 @@ def _get_properties(pywin_obj):
     '''
     properties = pywin_obj.GetProperties()
     return properties
+    
+def _get_additional_properties(pywin_obj, sub_pywin_obj):
+    '''
+    returns {p_name: p_value,..}
+    '''
+    additional_properties = {}
+    try:
+      all_controls = pywin_obj.Children()
+    except:
+      pass
+    else:
+      uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
+      #print len(uniq_names)
+      for uniq_name, obj in uniq_names.items():
+        if obj == sub_pywin_obj:
+          access_name = uniq_name
+          break
+        else:
+          access_name = 'Unknown'
+      additional_properties = {'Access name' : access_name}
+    return additional_properties
 
 def _get_subitems(pywin_obj):
     '''

@@ -69,9 +69,12 @@ class Frame1(wx.Frame):
         self._refresh_windows_tree()
         
     def OnTreeCtrl1TreeSelChanged(self, event):
+        the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         tree_item = event.GetItem()
+        parent_item = self.treeCtrl_ObjectsBrowser.GetItemParent(tree_item)
+        parent_obj = self.treeCtrl_ObjectsBrowser.GetItemData(parent_item).GetData()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        self._set_prorerties(obj)
+        self._set_prorerties(parent_obj, obj)
         self._add_subitems(tree_item, obj)        
                     
     def ObjectsBrowserRight_Click(self, event):
@@ -92,7 +95,11 @@ class Frame1(wx.Frame):
         
     def _refresh_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
+        #item_data = wx.TreeItemData()
+        #item_data.SetData('root')
+        #self.treeCtrl_ObjectsBrowser.AddRoot('PC name', data = item_data)
         self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
+        #del item_data
         the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         for (w_title, w_obj) in proxy._get_windows():
             item_data = wx.TreeItemData()
@@ -101,9 +108,10 @@ class Frame1(wx.Frame):
             del item_data
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
-    def _set_prorerties(self, obj):
+    def _set_prorerties(self, parent_obj, obj):
         self.listBox_Properties.Clear()        
         properties = proxy._get_properties(obj)
+        properties.update(proxy._get_additional_properties(parent_obj, obj))
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower())
         for p_name in param_names:
@@ -116,5 +124,7 @@ class Frame1(wx.Frame):
         for i_name, i_obj in subitems:
             item_data = wx.TreeItemData()
             item_data.SetData(i_obj)
-            self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)   
+            self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)  
+            del item_data
+
 
