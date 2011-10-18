@@ -75,6 +75,7 @@ def _get_subitems(pywin_obj):
         if not c_name:
             c_name = 'Unknow control name!'
         subitems.append((c_name, control))
+    subitems.sort(key=lambda name: name[0].lower())
     return subitems
 
 def _get_actions(pywin_obj):
