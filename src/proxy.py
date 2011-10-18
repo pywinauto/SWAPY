@@ -9,6 +9,8 @@ ACTIONS =  {101 : 'Close',
             }
 
 
+pywinauto.timings.Timings.window_find_timeout = 1            
+
 def test():
     return '1'
 
@@ -21,7 +23,10 @@ def _get_windows():
     handles = pywinauto.findwindows.find_windows(title_re='.*')
     for w_handle in handles:
         wind = app.window_(handle=w_handle)
-        title = wind.Texts()[0]
+        texts = wind.Texts()
+        while texts.count(''):
+          texts.remove('')
+        title = ', '.join(texts)
         if not title:
             title = 'Unknow title!'
         windows.append((title, wind))
@@ -42,7 +47,10 @@ def _get_subitems(pywin_obj):
     subitems = []
     controls = pywin_obj.Children()
     for control in controls:
-        c_name = control.Texts()[0]
+        texts = control.Texts()
+        while texts.count(''):
+          texts.remove('')
+        c_name = ', '.join(texts)
         if not c_name:
             c_name = 'Unknow control name!'
         subitems.append((c_name, control))
