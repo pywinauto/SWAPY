@@ -2,6 +2,7 @@
 
 import wx
 import proxy
+import exceptions
 
 def create(parent):
     return Frame1(parent)
@@ -114,8 +115,15 @@ class Frame1(wx.Frame):
         properties.update(proxy._get_additional_properties(parent_obj, obj))
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower())
+        #print len(param_names)
         for p_name in param_names:
-            item = '{0:30} {1:*^1} {2:30}'.format(p_name, ':',str(properties[p_name]))
+            p_name_str = str(p_name)
+            try:
+              p_values_str = str(properties[p_name])
+            except exceptions.UnicodeEncodeError:
+                p_values_str = properties[p_name].encode('unicode-escape', 'replace')
+            item = '{0:30} {1:*^1} {2:30}'.format(p_name_str, ':',p_values_str)
+            #item = '{0:30} {1:*^1} {2:30}'.format(str(p_name), ':',str(properties[p_name]))
             self.listBox_Properties.Append(item)
         
     def _add_subitems(self, tree_item, obj):
