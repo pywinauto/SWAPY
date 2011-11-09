@@ -76,7 +76,8 @@ class Frame1(wx.Frame):
         parent_obj = self.treeCtrl_ObjectsBrowser.GetItemData(parent_item).GetData()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         self._set_prorerties(parent_obj, obj)
-        self._add_subitems(tree_item, obj)        
+        self._add_subitems(tree_item, obj)
+        proxy.highlight_control(obj)
                     
     def ObjectsBrowserRight_Click(self, event):
         menu = wx.Menu()
