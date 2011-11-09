@@ -1,5 +1,9 @@
 
 import pywinauto
+import time
+import wx
+import thread
+
 '''
 proxy module for pywinauto 
 '''
@@ -98,3 +102,30 @@ def exec_action(pywin_obj, action_id):
     action = ACTIONS[action_id]
     exec('pywin_obj.'+action+'()')
     return 0
+
+def highlight_control(control):
+    def _highlight_control(control):
+        #app = wx.PySimpleApp()
+        rect = control.Rectangle()
+        handle = control.handle
+        wx_obj = wx.Frame(None, -1, '')
+        wx_obj.AssociateHandle(handle)
+        dc = wx.WindowDC(wx_obj)
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        #dc.DrawRectangle(rect.left-20, rect.top-20, rect.width(), rect.height())
+        for i in range(3):
+          dc.DrawRectangle(0, 0, rect.width(), rect.height())
+          time.sleep(0.3)
+          wx_obj.Refresh()
+          time.sleep(0.2)
+        wx_obj.DissociateHandle()
+        wx_obj.Close()
+        dc.Destroy()
+        #app.MainLoop()
+        #app.Destroy()
+    try:
+        thread.start_new_thread(_highlight_control,(control,))
+    except:
+        return 1
+    else:
+        return 0
