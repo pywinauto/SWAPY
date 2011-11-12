@@ -115,10 +115,9 @@ class Frame1(wx.Frame):
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
     def _set_prorerties(self, obj):
-        parent_obj = obj.Parent()
         self.listBox_Properties.Clear()        
         properties = proxy._get_properties(obj)
-        properties.update(proxy._get_additional_properties(parent_obj, obj))
+        properties.update(proxy._get_additional_properties(obj))
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower())
         #print len(param_names)
