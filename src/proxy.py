@@ -44,26 +44,31 @@ def _get_properties(pywin_obj):
     properties = pywin_obj.GetProperties()
     return properties
     
-def _get_additional_properties(pywin_obj, sub_pywin_obj):
+def _get_additional_properties(pywin_obj):
     '''
     returns {p_name: p_value,..}
     '''
-    additional_properties = {}
     try:
-      all_controls = pywin_obj.Children()
+      parent_obj = pywin_obj.Parent()
     except:
-      pass
+      return {}
     else:
-      uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
-      #print len(uniq_names)
-      for uniq_name, obj in uniq_names.items():
-        if obj == sub_pywin_obj:
-          access_name = uniq_name
-          break
-        else:
-          access_name = 'Unknown'
-      additional_properties = {'Access name' : access_name}
-    return additional_properties
+      additional_properties = {}
+      try:
+        all_controls = parent_obj.Children()
+      except:
+        pass
+      else:
+        uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
+        #print len(uniq_names)
+        for uniq_name, obj in uniq_names.items():
+          if obj == pywin_obj:
+            access_name = uniq_name
+            break
+          else:
+            access_name = 'Unknown'
+        additional_properties = {'Access name' : access_name}
+      return additional_properties
 
 def _get_subitems(pywin_obj):
     '''
@@ -121,13 +126,14 @@ window."+action+"()\n\
 "
     else:
       code = "\
-window["++"]."+action+"()\n\
+window['"+_get_additional_properties(pywin_obj)['Access name']+"']."+action+"()\n\
 "
     #exec('pywin_obj.'+action+'()')
     return code
 
 def highlight_control(control):
     def _highlight_control(control):
+        print('sH')
         #app = wx.PySimpleApp()
         rect = control.Rectangle()
         handle = control.handle
@@ -144,9 +150,11 @@ def highlight_control(control):
         wx_obj.DissociateHandle()
         wx_obj.Close()
         dc.Destroy()
+        print('fH')
         #app.MainLoop()
         #app.Destroy()
     try:
+        pass
         thread.start_new_thread(_highlight_control,(control,))
     except:
         return 1
