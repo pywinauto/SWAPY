@@ -48,7 +48,7 @@ class Frame1(wx.Frame):
 
         self.textCtrl_Editor = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL_EDITOR,
               name='textCtrl_Editor', parent=self, pos=wx.Point(360, 20),
-              size=wx.Size(330, 270), style=0, value='')
+              size=wx.Size(330, 270), style=wx.TE_MULTILINE | wx.TE_READONLY, value='')
         
         #self.textCtrl_Editor.SetLabel('Code editor')
 
@@ -62,7 +62,9 @@ class Frame1(wx.Frame):
 
     def __init__(self, parent):
         self._init_ctrls(parent)
-        self._refresh_windows_tree()        
+        self._refresh_windows_tree()   
+        self.textCtrl_Editor.AppendText('import pywinauto\n\n')
+        self.textCtrl_Editor.AppendText('pwa_app = pywinauto.application.Application()\n')
         
     def OnlistBox_Properties(self, event):
         #event.Skip()
@@ -83,7 +85,7 @@ class Frame1(wx.Frame):
         menu = wx.Menu()
         #tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         tree_item = event.GetItem()
-        self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
+        #self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         for id, action_name in proxy._get_actions(obj):
             menu.Append(id, action_name)
@@ -93,6 +95,7 @@ class Frame1(wx.Frame):
     def make_action(self, event):
         tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+        self.textCtrl_Editor.AppendText(proxy.get_code(obj, event.Id))
         proxy.exec_action(obj, event.Id)
         
     def _refresh_windows_tree(self):

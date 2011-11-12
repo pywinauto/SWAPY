@@ -97,11 +97,34 @@ def _get_actions(pywin_obj):
             allowed_actions.append((id,action))
     allowed_actions.sort(key=lambda name: name[1].lower())
     return allowed_actions
-            
+    
+def _get_pywinobj_type(pywin_obj):
+    if type(pywin_obj) == pywinauto.application.WindowSpecification:
+      return 'window'
+    elif 1==0:
+      return 'other'
+    else:
+      return 'unknown'
+    
 def exec_action(pywin_obj, action_id):
     action = ACTIONS[action_id]
     exec('pywin_obj.'+action+'()')
     return 0
+    
+def get_code(pywin_obj, action_id):
+    action = ACTIONS[action_id]
+    if _get_pywinobj_type(pywin_obj) == 'window':
+      code = "\
+w_handle = pywinauto.findwindows.find_windows(title_re=u'"+ pywin_obj.WindowText().encode('unicode-escape', 'replace') +"', class_name='"+ pywin_obj.Class() +"')[0]\n\
+window = pwa_app.window_(handle=w_handle)\n\
+window."+action+"()\n\
+"
+    else:
+      code = "\
+window["++"]."+action+"()\n\
+"
+    #exec('pywin_obj.'+action+'()')
+    return code
 
 def highlight_control(control):
     def _highlight_control(control):
