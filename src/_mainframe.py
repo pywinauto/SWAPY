@@ -74,10 +74,11 @@ class Frame1(wx.Frame):
     def OnTreeCtrl1TreeSelChanged(self, event):
         the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         tree_item = event.GetItem()
-        parent_item = self.treeCtrl_ObjectsBrowser.GetItemParent(tree_item)
-        parent_obj = self.treeCtrl_ObjectsBrowser.GetItemData(parent_item).GetData()
+        #parent_item = self.treeCtrl_ObjectsBrowser.GetItemParent(tree_item)
+        #parent_obj = self.treeCtrl_ObjectsBrowser.GetItemData(parent_item).GetData()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        self._set_prorerties(parent_obj, obj)
+        #self._set_prorerties(parent_obj, obj)
+        self._set_prorerties(obj)
         self._add_subitems(tree_item, obj)
         proxy.highlight_control(obj)
                     
@@ -113,7 +114,8 @@ class Frame1(wx.Frame):
             del item_data
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
-    def _set_prorerties(self, parent_obj, obj):
+    def _set_prorerties(self, obj):
+        parent_obj = obj.Parent()
         self.listBox_Properties.Clear()        
         properties = proxy._get_properties(obj)
         properties.update(proxy._get_additional_properties(parent_obj, obj))
