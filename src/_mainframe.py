@@ -7,7 +7,7 @@ import exceptions
 def create(parent):
     return Frame1(parent)
 
-[wxID_FRAME1, wxID_FRAME1LISTBOX_PROPERTIES, wxID_FRAME1STATICBOX_EDITOR, 
+[wxID_FRAME1, wxID_FRAME1LISTCTRL1_PROPERTIES, wxID_FRAME1STATICBOX_EDITOR, 
  wxID_FRAME1STATICBOX_OBJECTSBROWSER, wxID_FRAME1STATICBOX_PROPRTIES, 
  wxID_FRAME1TEXTCTRL_EDITOR, wxID_FRAME1TREECTRL_OBJECTSBROWSER
 ] = [wx.NewId() for _init_ctrls in range(7)]
@@ -52,13 +52,13 @@ class Frame1(wx.Frame):
         
         #self.textCtrl_Editor.SetLabel('Code editor')
 
-        self.listBox_Properties = wx.ListBox(choices=[],
-              id=wxID_FRAME1LISTBOX_PROPERTIES, name='listBox_Properties',
+        self.listCtrl_Properties = wx.ListCtrl(id=wxID_FRAME1LISTCTRL1_PROPERTIES, name='listCtrl1_Properties',
               parent=self, pos=wx.Point(360, 320), size=wx.Size(330, 270),
-              style=0)
-        self.listBox_Properties.Bind(wx.EVT_LISTBOX_DCLICK, self.OnlistBox_Properties,
-              id=wxID_FRAME1LISTBOX_PROPERTIES)
-        #self.listBox_Properties.SetLabel('Object properties')
+              style=wx.LC_REPORT)
+        self.listCtrl_Properties.InsertColumn(col=0, format=wx.LIST_FORMAT_LEFT,
+              heading='Property', width=-1)
+        self.listCtrl_Properties.InsertColumn(col=1, format=wx.LIST_FORMAT_LEFT,
+              heading='Value', width=-1)
 
     def __init__(self, parent):
         self._init_ctrls(parent)
@@ -66,11 +66,7 @@ class Frame1(wx.Frame):
         self.textCtrl_Editor.AppendText('import pywinauto\n\n')
         self.textCtrl_Editor.AppendText('pwa_app = pywinauto.application.Application()\n')
         
-    def OnlistBox_Properties(self, event):
-        #event.Skip()
-        print('test')
-        self._refresh_windows_tree()
-        
+
     def OnTreeCtrl1TreeSelChanged(self, event):
         the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         tree_item = event.GetItem()
@@ -115,11 +111,12 @@ class Frame1(wx.Frame):
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
     def _set_prorerties(self, obj):
-        self.listBox_Properties.Clear()        
+        #self.listBox_Properties.Clear()
+        self.listCtrl_Properties.DeleteAllItems()
         properties = proxy._get_properties(obj)
         properties.update(proxy._get_additional_properties(obj))
         param_names = properties.keys()
-        param_names.sort(key=lambda name: name.lower())
+        param_names.sort(key=lambda name: name.lower(), reverse=True)
         #print len(param_names)
         for p_name in param_names:
             p_name_str = str(p_name)
@@ -127,9 +124,11 @@ class Frame1(wx.Frame):
               p_values_str = str(properties[p_name])
             except exceptions.UnicodeEncodeError:
                 p_values_str = properties[p_name].encode('unicode-escape', 'replace')
-            item = '{0:30} {1:*^1} {2:30}'.format(p_name_str, ':',p_values_str)
+            #item = '{0:30} {1:*^1} {2:30}'.format(p_name_str, ':',p_values_str)
             #item = '{0:30} {1:*^1} {2:30}'.format(str(p_name), ':',str(properties[p_name]))
-            self.listBox_Properties.Append(item)
+            #self.listBox_Properties.Append(item)
+            index = self.listCtrl_Properties.InsertStringItem(0, p_name_str)
+            self.listCtrl_Properties.SetStringItem(index, 1, p_values_str)
         
     def _add_subitems(self, tree_item, obj):
         self.treeCtrl_ObjectsBrowser.DeleteChildren(tree_item)
