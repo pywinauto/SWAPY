@@ -4,6 +4,7 @@ import time
 import wx
 import thread
 import exceptions
+import platform
 
 '''
 proxy module for pywinauto 
@@ -176,4 +177,7 @@ class SysInfo(object):
         return 0
         
     def GetProperties(self):
-        return {'1':'1'}
+        info = { 'Platform' : platform.platform(), \
+                'Processor' : platform.processor(), \
+                'PC name' : platform.node() }
+        return info
