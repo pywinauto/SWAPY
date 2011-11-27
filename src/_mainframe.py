@@ -148,7 +148,7 @@ class Frame1(wx.Frame):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
         item_data = wx.TreeItemData()
         item_data.SetData(proxy.SysInfo())
-        self.treeCtrl_ObjectsBrowser.AddRoot('PC name', data = item_data)
+        self.treeCtrl_ObjectsBrowser.AddRoot(proxy.SysInfo().GetProperties()['PC name'], data = item_data)
         #self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
         del item_data
         the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
