@@ -97,6 +97,7 @@ class Frame1(wx.Frame):
         self.GLOB_prop_item_index = event.GetIndex()
         menu = wx.Menu()
         menu.Append(201, 'Copy all')
+        menu.AppendSeparator()
         menu.Append(202, 'Copy property')
         menu.Append(203, 'Copy value')
         self.PopupMenu(menu)     
@@ -121,14 +122,20 @@ class Frame1(wx.Frame):
     def clipboard_action(self, menu_id):
         item = self.GLOB_prop_item_index
         clipdata = wx.TextDataObject()
-        property = self.listCtrl_Properties.GetItem(self.GLOB_prop_item_index,0).GetText()
-        value = self.listCtrl_Properties.GetItem(self.GLOB_prop_item_index,1).GetText()
         if menu_id == 201:
-             clipdata.SetText("%s : %s" % (property, value))
+            all_texts = ''
+            items_count = self.listCtrl_Properties.GetItemCount()
+            for i in range(items_count):
+                prop_name = self.listCtrl_Properties.GetItem(i, 0).GetText()
+                val_name = self.listCtrl_Properties.GetItem(i, 1).GetText()
+                all_texts += '%s : %s' % (prop_name, val_name) + '\n'
+            clipdata.SetText(all_texts)
         elif menu_id == 202:
-             clipdata.SetText(property)
+            property = self.listCtrl_Properties.GetItem(item,0).GetText()
+            clipdata.SetText(property)
         elif menu_id == 203:
-             clipdata.SetText(value)
+            value = self.listCtrl_Properties.GetItem(item,1).GetText()
+            clipdata.SetText(value)
         else:
             #Unknow id
             pass
