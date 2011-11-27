@@ -3,6 +3,7 @@ import pywinauto
 import time
 import wx
 import thread
+import exceptions
 
 '''
 proxy module for pywinauto 
@@ -83,7 +84,11 @@ def _get_subitems(pywin_obj):
         c_name = ', '.join(texts)
         if not c_name:
             c_name = 'Unknow control name!'
-        subitems.append((c_name, control))
+        try:
+            c_name_str = str(c_name)
+        except exceptions.UnicodeEncodeError:
+            c_name_str = c_name.encode('unicode-escape', 'replace')
+        subitems.append((c_name_str, control))
     subitems.sort(key=lambda name: name[0].lower())
     return subitems
 
@@ -133,7 +138,7 @@ window['"+_get_additional_properties(pywin_obj)['Access name']+"']."+action+"()\
 
 def highlight_control(control):
     def _highlight_control(control):
-        print('sH')
+        #print('sH')
         #app = wx.PySimpleApp()
         rect = control.Rectangle()
         handle = control.handle
@@ -150,7 +155,7 @@ def highlight_control(control):
         wx_obj.DissociateHandle()
         wx_obj.Close()
         dc.Destroy()
-        print('fH')
+        #print('fH')
         #app.MainLoop()
         #app.Destroy()
     try:
@@ -160,3 +165,15 @@ def highlight_control(control):
         return 1
     else:
         return 0
+        
+class SysInfo(object):
+    handle = 0
+    
+    def Children(self):
+        return []
+        
+    def Rectangle(self):
+        return 0
+        
+    def GetProperties(self):
+        return {'1':'1'}
