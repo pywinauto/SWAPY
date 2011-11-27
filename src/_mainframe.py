@@ -43,7 +43,7 @@ class Frame1(wx.Frame):
         self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_SEL_CHANGED,
               self.OnTreeCtrl1TreeSelChanged, id=wxID_FRAME1TREECTRL_OBJECTSBROWSER)
         self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.ObjectsBrowserRight_Click)
-        self.Bind(wx.EVT_MENU, self.make_action) # - make action
+        self.Bind(wx.EVT_MENU, self.menu_action) # - make action
         #self.treeCtrl_ObjectsBrowser.SetLabel('Shows windows, controls hierarchy')
 
         self.textCtrl_Editor = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL_EDITOR,
@@ -59,6 +59,8 @@ class Frame1(wx.Frame):
               heading='Property', width=-1)
         self.listCtrl_Properties.InsertColumn(col=1, format=wx.LIST_FORMAT_LEFT,
               heading='Value', width=-1)
+        self.listCtrl_Properties.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,
+              self.OnlistCtrl_PropertiesListItemRightClick, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
 
     def __init__(self, parent):
         self._init_ctrls(parent)
@@ -82,18 +84,60 @@ class Frame1(wx.Frame):
         menu = wx.Menu()
         #tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         tree_item = event.GetItem()
-        #self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
+        self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         for id, action_name in proxy._get_actions(obj):
             menu.Append(id, action_name)
         self.PopupMenu(menu)     
         menu.Destroy() 
-        
-    def make_action(self, event):
+    
+    def OnlistCtrl_PropertiesListItemRightClick(self, event):
+        self.GLOB_prop_item_index = event.GetIndex()
+        menu = wx.Menu()
+        menu.Append(201, 'Copy all')
+        menu.Append(202, 'Copy property')
+        menu.Append(203, 'Copy value')
+        self.PopupMenu(menu)     
+        menu.Destroy() 
+    
+    def menu_action(self, event):
+        id = event.Id
+        #print id
+        if 99 < id < 200:
+            #object browser menu
+            self.make_action(id)
+        elif 199 < id < 300:
+            #properties viewer menu
+            self.clipboard_action(id)
+        else:
+            #Unknown menu id
+            pass
+    
+    def clipboard_action(self, menu_id):
+        item = self.GLOB_prop_item_index
+        clipdata = wx.TextDataObject()
+        property = self.listCtrl_Properties.GetItem(self.GLOB_prop_item_index,0).GetText()
+        value = self.listCtrl_Properties.GetItem(self.GLOB_prop_item_index,1).GetText()
+        if menu_id == 201:
+             clipdata.SetText("%s : %s" % (property, value))
+        elif menu_id == 202:
+             clipdata.SetText(property)
+        elif menu_id == 203:
+             clipdata.SetText(value)
+        else:
+            #Unknow id
+            pass
+        self.GLOB_prop_item_index = None
+        wx.TheClipboard.Open()
+        wx.TheClipboard.SetData(clipdata)
+        wx.TheClipboard.Close()
+    
+    
+    def make_action(self, menu_id):
         tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        self.textCtrl_Editor.AppendText(proxy.get_code(obj, event.Id))
-        proxy.exec_action(obj, event.Id)
+        self.textCtrl_Editor.AppendText(proxy.get_code(obj, menu_id))
+        proxy.exec_action(obj, menu_id)
         
     def _refresh_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
