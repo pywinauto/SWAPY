@@ -61,6 +61,7 @@ class Frame1(wx.Frame):
               heading='Value', width=-1)
         self.listCtrl_Properties.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,
               self.OnlistCtrl_PropertiesListItemRightClick, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
+        self.listCtrl_Properties.Bind(wx.EVT_LEFT_DCLICK, self.Fefresh, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
 
     def __init__(self, parent):
         self._init_ctrls(parent)
@@ -77,8 +78,9 @@ class Frame1(wx.Frame):
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         #self._set_prorerties(parent_obj, obj)
         self._set_prorerties(obj)
-        self._add_subitems(tree_item, obj)
-        proxy.highlight_control(obj)
+        if type(obj) != proxy.SysInfo:            
+            self._add_subitems(tree_item, obj)
+            proxy.highlight_control(obj)
                     
     def ObjectsBrowserRight_Click(self, event):
         menu = wx.Menu()
@@ -99,6 +101,9 @@ class Frame1(wx.Frame):
         menu.Append(203, 'Copy value')
         self.PopupMenu(menu)     
         menu.Destroy() 
+    
+    def Fefresh(self, event):
+        self._refresh_windows_tree()
     
     def menu_action(self, event):
         id = event.Id
@@ -141,17 +146,18 @@ class Frame1(wx.Frame):
         
     def _refresh_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
-        #item_data = wx.TreeItemData()
-        #item_data.SetData('root')
-        #self.treeCtrl_ObjectsBrowser.AddRoot('PC name', data = item_data)
-        self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
-        #del item_data
+        item_data = wx.TreeItemData()
+        item_data.SetData(proxy.SysInfo())
+        self.treeCtrl_ObjectsBrowser.AddRoot('PC name', data = item_data)
+        #self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
+        del item_data
         the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         for (w_title, w_obj) in proxy._get_windows():
-            item_data = wx.TreeItemData()
-            item_data.SetData(w_obj)
-            self.treeCtrl_ObjectsBrowser.AppendItem(the_root,w_title,data = item_data)
-            del item_data
+            #print w_title
+            sub_item_data = wx.TreeItemData()
+            sub_item_data.SetData(w_obj)
+            self.treeCtrl_ObjectsBrowser.AppendItem(the_root,w_title,data = sub_item_data)
+            del sub_item_data
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
     def _set_prorerties(self, obj):
