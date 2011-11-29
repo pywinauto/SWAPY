@@ -138,34 +138,14 @@ window['"+_get_additional_properties(pywin_obj)['Access name']+"']."+action+"()\
     return code
 
 def highlight_control(control):
-    def _highlight_control(control):
-        #print('sH')
-        #app = wx.PySimpleApp()
-        rect = control.Rectangle()
-        handle = control.handle
-        wx_obj = wx.Frame(None, -1, '')
-        wx_obj.AssociateHandle(handle)
-        dc = wx.WindowDC(wx_obj)
-        dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        #dc.DrawRectangle(rect.left-20, rect.top-20, rect.width(), rect.height())
-        for i in range(3):
-          dc.DrawRectangle(0, 0, rect.width(), rect.height())
-          time.sleep(0.3)
-          wx_obj.Refresh()
-          time.sleep(0.2)
-        wx_obj.DissociateHandle()
-        wx_obj.Close()
-        dc.Destroy()
-        #print('fH')
-        #app.MainLoop()
-        #app.Destroy()
-    try:
-        pass
-        thread.start_new_thread(_highlight_control,(control,))
-    except:
-        return 1
-    else:
-        return 0
+    def _highlight_control(control, repeat = 1):
+            while repeat > 0:
+                repeat -= 1
+                control.DrawOutline(thickness=1)
+                time.sleep(0.3)
+                control.DrawOutline(colour=0xffffff, thickness=1)
+                time.sleep(0.2)
+    thread.start_new_thread(_highlight_control,(control,3))
         
 class SysInfo(object):
     handle = 0
