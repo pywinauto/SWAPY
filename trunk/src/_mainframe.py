@@ -23,6 +23,8 @@ class Frame1(wx.Frame):
               pos=wx.Point(563, 129), size=wx.Size(708, 634),
               style=wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN,
               title='SWAPY - Simple Windows Automation on Python')
+        self.SetIcon(wx.Icon('swapy_dog_head.ico',
+              wx.BITMAP_TYPE_ICO))
         self.SetClientSize(wx.Size(700, 600))
 
         self.staticBox_ObjectsBrowser = wx.StaticBox(id=wxID_FRAME1STATICBOX_OBJECTSBROWSER,
