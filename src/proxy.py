@@ -5,14 +5,11 @@ import wx
 import thread
 import exceptions
 import platform
+from const import *
 
 '''
 proxy module for pywinauto 
 '''
-
-ACTIONS =  {101 : 'Close',
-            102 : 'Click'
-            }
 
 
 pywinauto.timings.Timings.window_find_timeout = 1            
@@ -63,13 +60,12 @@ def _get_additional_properties(pywin_obj):
       else:
         uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
         #print len(uniq_names)
+        access_names = []
         for uniq_name, obj in uniq_names.items():
-          if obj == pywin_obj:
-            access_name = uniq_name
-            break
-          else:
-            access_name = 'Unknown'
-        additional_properties = {'Access name' : access_name}
+          if uniq_name != '' and obj == pywin_obj:
+            access_names.append(uniq_name)
+        access_names.sort(key=len)
+        additional_properties = {'Access names' : access_names}
       return additional_properties
 
 def _get_subitems(pywin_obj):
@@ -132,7 +128,7 @@ window."+action+"()\n\
 "
     else:
       code = "\
-window['"+_get_additional_properties(pywin_obj)['Access name']+"']."+action+"()\n\
+window['"+_get_additional_properties(pywin_obj)['Access names'][0]+"']."+action+"()\n\
 "
     #exec('pywin_obj.'+action+'()')
     return code
@@ -141,12 +137,12 @@ def highlight_control(control):
     def _highlight_control(control, repeat = 1):
             while repeat > 0:
                 repeat -= 1
-                control.DrawOutline(thickness=1)
+                control.DrawOutline('red', thickness=1)
                 time.sleep(0.3)
                 control.DrawOutline(colour=0xffffff, thickness=1)
                 time.sleep(0.2)
     thread.start_new_thread(_highlight_control,(control,3))
-        
+
 class SysInfo(object):
     handle = 0
     
