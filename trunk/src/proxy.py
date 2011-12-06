@@ -156,4 +156,15 @@ class SysInfo(object):
         info = { 'Platform' : platform.platform(), \
                 'Processor' : platform.processor(), \
                 'PC name' : platform.node() }
+                
         return info
+        
+def resource_path(relative):
+    import os
+    return os.path.join(
+        os.environ.get(
+            "_MEIPASS2",
+            os.path.abspath(".")
+        ),
+        relative
+    )
