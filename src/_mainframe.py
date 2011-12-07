@@ -3,6 +3,7 @@
 import wx
 import proxy
 import exceptions
+import const
 
 def create(parent):
     return Frame1(parent)
@@ -22,7 +23,7 @@ class Frame1(wx.Frame):
         wx.Frame.__init__(self, id=wxID_FRAME1, name='', parent=prnt,
               pos=wx.Point(563, 129), size=wx.Size(708, 634),
               style=wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN,
-              title='SWAPY - Simple Windows Automation on Python')
+              title='SWAPY - Simple Windows Automation on Python. v %s' % const.VERSION)
         self.SetIcon(wx.Icon(proxy.resource_path("swapy_dog_head.ico"),
               wx.BITMAP_TYPE_ICO))
         self.SetClientSize(wx.Size(700, 600))
