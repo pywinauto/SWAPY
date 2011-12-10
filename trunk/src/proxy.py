@@ -59,7 +59,10 @@ def _get_properties(pywin_obj):
     '''
     returns {p_name: p_value,..}
     '''
-    properties = pywin_obj.GetProperties()
+    try:
+        properties = pywin_obj.GetProperties()
+    except exceptions.RuntimeError:
+        properties = {} #workaround
     return properties
     
 def _get_additional_properties(pywin_obj):
@@ -94,12 +97,15 @@ def _get_subitems(pywin_obj):
     subitems = []
     controls = pywin_obj.Children()
     for control in controls:
-        texts = control.Texts()
+        try:
+            texts = control.Texts()
+        except exceptions.RuntimeError:
+            texts = ['Unknow control name2!'] #workaround
         while texts.count(''):
           texts.remove('')
         c_name = ', '.join(texts)
         if not c_name:
-            c_name = 'Unknow control name!'
+            c_name = 'Unknow control name1!'
         try:
             c_name_str = str(c_name)
         except exceptions.UnicodeEncodeError:
