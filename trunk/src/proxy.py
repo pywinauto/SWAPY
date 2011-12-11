@@ -51,7 +51,7 @@ def _get_windows():
         title = ', '.join(texts)
         if not title:
             title = 'Unknow title!'
-        #title = unicode(title)
+        title = unicode(title)
         windows.append((title, wind))
     windows.sort(key=lambda name: name[0].lower())
     return windows
@@ -107,7 +107,7 @@ def _get_subitems(pywin_obj):
         c_name = ', '.join(texts)
         if not c_name:
             c_name = 'Unknow control name1!'
-        c_name_str = c_name
+        c_name_str = unicode(c_name)
         '''
         try:
             c_name_str = str(c_name)

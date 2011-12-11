@@ -187,6 +187,7 @@ class Frame1(wx.Frame):
             sub_item_data = wx.TreeItemData()
             sub_item_data.SetData(w_obj)
             self.treeCtrl_ObjectsBrowser.AppendItem(the_root,w_title,data = sub_item_data)
+            #self.textCtrl_Editor.AppendText(w_title)
             del sub_item_data
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
@@ -200,18 +201,20 @@ class Frame1(wx.Frame):
         #print len(param_names)
         for p_name in param_names:
             p_name_str = str(p_name)
-            p_values_str = properties[p_name]
+            #if type(properties[p_name]) == list:
+            #    p_values_str = unicode(', '.join(map(unicode ,properties[p_name])))
+            #else:
+            p_values_str = unicode(properties[p_name])
+             
             '''
             try:
               p_values_str = str(properties[p_name])
             except exceptions.UnicodeEncodeError:
-                p_values_str = properties[p_name].encode('unicode-escape', 'replace')
+                p_values_str = properties[p_name].encode('', 'replace')
             '''
-            #item = '{0:30} {1:*^1} {2:30}'.format(p_name_str, ':',p_values_str)
-            #item = '{0:30} {1:*^1} {2:30}'.format(str(p_name), ':',str(properties[p_name]))
-            #self.listBox_Properties.Append(item)
             index = self.listCtrl_Properties.InsertStringItem(0, p_name_str)
             self.listCtrl_Properties.SetStringItem(index, 1, p_values_str)
+            #self.textCtrl_Editor.AppendText(p_values_str)
         
     def _add_subitems(self, tree_item, obj):
         self.treeCtrl_ObjectsBrowser.DeleteChildren(tree_item)
