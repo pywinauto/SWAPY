@@ -94,14 +94,14 @@ class Frame1(wx.Frame):
         
 
     def OnTreeCtrl1TreeSelChanged(self, event):
-        the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
+        #the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         tree_item = event.GetItem()
         #parent_item = self.treeCtrl_ObjectsBrowser.GetItemParent(tree_item)
         #parent_obj = self.treeCtrl_ObjectsBrowser.GetItemData(parent_item).GetData()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         #self._set_prorerties(parent_obj, obj)
         self._set_prorerties(obj)
-        if type(obj) != proxy.SysInfo:            
+        if type(obj) != proxy.SysInfo:            #should be removed windows are children of the PC item!
             self._add_subitems(tree_item, obj)
             proxy.highlight_control(obj)
                     
@@ -200,10 +200,13 @@ class Frame1(wx.Frame):
         #print len(param_names)
         for p_name in param_names:
             p_name_str = str(p_name)
+            p_values_str = properties[p_name]
+            '''
             try:
               p_values_str = str(properties[p_name])
             except exceptions.UnicodeEncodeError:
                 p_values_str = properties[p_name].encode('unicode-escape', 'replace')
+            '''
             #item = '{0:30} {1:*^1} {2:30}'.format(p_name_str, ':',p_values_str)
             #item = '{0:30} {1:*^1} {2:30}'.format(str(p_name), ':',str(properties[p_name]))
             #self.listBox_Properties.Append(item)
