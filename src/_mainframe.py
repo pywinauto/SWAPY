@@ -84,7 +84,7 @@ class Frame1(wx.Frame):
               heading='Value', width=-1)
         self.listCtrl_Properties.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,
               self.OnlistCtrl_PropertiesListItemRightClick, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
-        self.listCtrl_Properties.Bind(wx.EVT_LEFT_DCLICK, self.Fefresh, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
+        self.listCtrl_Properties.Bind(wx.EVT_LEFT_DCLICK, self.Refresh, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
 
     def __init__(self, parent):
         self._init_ctrls(parent)
@@ -101,9 +101,9 @@ class Frame1(wx.Frame):
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         #self._set_prorerties(parent_obj, obj)
         self._set_prorerties(obj)
-        if type(obj) != proxy.SysInfo:            #should be removed windows are children of the PC item!
-            self._add_subitems(tree_item, obj)
-            proxy.highlight_control(obj)
+        self._add_subitems(tree_item, obj)
+        self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
+        obj.Highlight_control()
                     
     def ObjectsBrowserRight_Click(self, event):
         menu = wx.Menu()
@@ -111,7 +111,7 @@ class Frame1(wx.Frame):
         tree_item = event.GetItem()
         self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        for id, action_name in proxy._get_actions(obj):
+        for id, action_name in obj.Get_actions():
             menu.Append(id, action_name)
         self.PopupMenu(menu)     
         menu.Destroy() 
@@ -126,7 +126,7 @@ class Frame1(wx.Frame):
         self.PopupMenu(menu)     
         menu.Destroy() 
     
-    def Fefresh(self, event):
+    def Refresh(self, event):
         self._refresh_windows_tree()
     
     def menu_action(self, event):
@@ -171,17 +171,19 @@ class Frame1(wx.Frame):
     def make_action(self, menu_id):
         tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        self.textCtrl_Editor.AppendText(proxy.get_code(obj, menu_id))
-        proxy.exec_action(obj, menu_id)
+        self.textCtrl_Editor.AppendText(obj.Get_code(menu_id))
+        obj.Exec_action(menu_id)
         
     def _refresh_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
         item_data = wx.TreeItemData()
-        item_data.SetData(proxy.SysInfo())
-        self.treeCtrl_ObjectsBrowser.AddRoot(proxy.SysInfo().GetProperties()['PC name'], data = item_data)
+        root_obj = proxy.PC_system(None)
+        item_data.SetData(root_obj)
+        self.treeCtrl_ObjectsBrowser.AddRoot(root_obj.GetProperties()['PC name'], data = item_data)
         #self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
         del item_data
-        the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
+        #the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
+        '''
         for (w_title, w_obj) in proxy._get_windows():
             #print w_title
             sub_item_data = wx.TreeItemData()
@@ -189,13 +191,14 @@ class Frame1(wx.Frame):
             self.treeCtrl_ObjectsBrowser.AppendItem(the_root,w_title,data = sub_item_data)
             #self.textCtrl_Editor.AppendText(w_title)
             del sub_item_data
+        '''
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
             
     def _set_prorerties(self, obj):
         #self.listBox_Properties.Clear()
         self.listCtrl_Properties.DeleteAllItems()
-        properties = proxy._get_properties(obj)
-        properties.update(proxy._get_additional_properties(obj))
+        properties = obj.GetProperties()
+        #properties.update(proxy._get_additional_properties(obj))
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower(), reverse=True)
         #print len(param_names)
@@ -218,7 +221,7 @@ class Frame1(wx.Frame):
         
     def _add_subitems(self, tree_item, obj):
         self.treeCtrl_ObjectsBrowser.DeleteChildren(tree_item)
-        subitems = proxy._get_subitems(obj)
+        subitems = obj.Get_subitems()
         for i_name, i_obj in subitems:
             item_data = wx.TreeItemData()
             item_data.SetData(i_obj)
