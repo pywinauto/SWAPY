@@ -39,6 +39,7 @@ ACTIONS =  {101 : 'Close',
             118 : 'RightClick',
             119 : 'RightClickInput',
             120 : 'SetFocus',
+            121 : 'Select',
             }
             
 VERSION = '0.3.4'

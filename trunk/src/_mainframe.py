@@ -111,8 +111,13 @@ class Frame1(wx.Frame):
         tree_item = event.GetItem()
         self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        for id, action_name in obj.Get_actions():
-            menu.Append(id, action_name)
+        actions = obj.Get_actions()
+        if actions:
+            for id, action_name in actions:
+                menu.Append(id, action_name)
+        else:
+            menu.Append(0, 'No actions')
+            menu.Enable(0, False)
         self.PopupMenu(menu)     
         menu.Destroy() 
     
