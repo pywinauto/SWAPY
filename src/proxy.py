@@ -210,6 +210,8 @@ class SWAPYObject(object):
         '''
         #original pywinauto object
         self.pwa_obj = pwa_obj
+        default_sort_key = lambda name: name[0].lower()
+        self.subitems_sort_key = default_sort_key
         
     def GetProperties(self):
         '''
@@ -242,7 +244,7 @@ class SWAPYObject(object):
             c_name_str = unicode(c_name)
             subitems.append((c_name_str, self._get_swapy_object(control)))
         subitems += self._get_additional_children()
-        subitems.sort(key=lambda name: name[0].lower())
+        subitems.sort(key=self.subitems_sort_key)
         return subitems
         
     def Exec_action(self, action_id):
@@ -250,6 +252,7 @@ class SWAPYObject(object):
         Execute action on the control
         '''
         action = ACTIONS[action_id]
+        #print('self.pwa_obj.'+action+'()')
         exec('self.pwa_obj.'+action+'()')
         return 0
         
@@ -306,26 +309,38 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
         Get additonal useful properties, like a handle, process ID, etc.
         Can be overridden by derived class
         '''
+        additional_properties = {}
+        #-----Access names
         try:
             parent_obj = self.pwa_obj.Parent()
         except:
-            return {}
+            pass
         else:
-            additional_properties = {}
             try:
                 all_controls = parent_obj.Children()
             except:
                 pass
             else:
-                uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
-                #print len(uniq_names)
                 access_names = []
+                uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
                 for uniq_name, obj in uniq_names.items():
                     if uniq_name != '' and obj == self.pwa_obj:
                       access_names.append(uniq_name)
                 access_names.sort(key=len)
-                additional_properties = {'Access names' : access_names}
-            return additional_properties
+                additional_properties.update({'Access names' : access_names})
+        #-----
+        
+        #-----pwa_type
+        additional_properties.update({'pwa_type' : str(type(self.pwa_obj))})
+        #---
+        
+        #-----handle
+        try:
+            additional_properties.update({'handle' : str(self.pwa_obj.handle)})
+        except:
+            pass
+        #---
+        return additional_properties
         
     def _get_children(self):
         '''
@@ -451,10 +466,18 @@ class Pwa_menu(SWAPYObject):
         '''
         Add submenu object as children
         '''
+        #print(dir(self.pwa_obj))
+        #print(self.pwa_obj.is_main_menu)
+        #print(self.pwa_obj.owner_item)
+        
+        self.subitems_sort_key = lambda obj: obj[1].pwa_obj.Index() #sorts items by indexes
         additional_children = []
         menu_items = self.pwa_obj.Items()
         for menu_item in menu_items:
-            menu_item_child = [(menu_item.Text(), self._get_swapy_object(menu_item))]
+            item_text = menu_item.Text()
+            if item_text == '':
+                item_text = '-----Separator-----'
+            menu_item_child = [(item_text, self._get_swapy_object(menu_item))]
             additional_children += menu_item_child
         return additional_children
         
@@ -475,9 +498,38 @@ class Pwa_menu_item(Pwa_menu):
         '''
         Add submenu object as children
         '''
+        #print(dir(self.pwa_obj))
+        #print(self.pwa_obj.menu)
+        #print self.get_menuitems_path()
+        
         additional_children = []
         submenu = self.pwa_obj.SubMenu()
         if submenu:
             submenu_child = [(self.pwa_obj.Text()+' submenu', self._get_swapy_object(submenu))]
             additional_children += submenu_child
         return additional_children
+        
+    def get_menuitems_path(self):
+        '''
+        Compose menuitems_path for GetMenuPath. Example "#0 -> Save As", "Tools -> #0 -> Configure"
+        '''
+        path = []
+        owner_item = self.pwa_obj
+        
+        while owner_item:
+            path.append(owner_item.Text())
+            menu = owner_item.menu
+            owner_item = menu.owner_item
+        return '->'.join(path[::-1])
+        
+    def Get_code(self, action_id):
+        '''
+        Generate code for pywinauto module
+        '''
+        action = ACTIONS[action_id]
+        code = "\
+window.MenuItem(u'"+self.get_menuitems_path().encode('unicode-escape', 'replace')+"')."+action+"()\n\
+"
+        return code
+        
+        
