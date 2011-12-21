@@ -476,7 +476,10 @@ class Pwa_menu(SWAPYObject):
         for menu_item in menu_items:
             item_text = menu_item.Text()
             if item_text == '':
-                item_text = '-----Separator-----'
+                if menu_item.Type() == 2048:
+                    item_text = '-----Separator-----'
+                else:
+                    item_text = 'Index: %d' % menu_item.Index()
             menu_item_child = [(item_text, self._get_swapy_object(menu_item))]
             additional_children += menu_item_child
         return additional_children
@@ -517,7 +520,10 @@ class Pwa_menu_item(Pwa_menu):
         owner_item = self.pwa_obj
         
         while owner_item:
-            path.append(owner_item.Text())
+            text = owner_item.Text()
+            if not text:
+                text = '#%d' % owner_item.Index()
+            path.append(text)
             menu = owner_item.menu
             owner_item = menu.owner_item
         return '->'.join(path[::-1])
