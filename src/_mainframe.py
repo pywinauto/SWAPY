@@ -39,52 +39,86 @@ class Frame1(wx.Frame):
     """
         
     def _init_ctrls(self, prnt):
-        # generated method, don't edit
-        wx.Frame.__init__(self, id=wxID_FRAME1, name='', parent=prnt,
-              pos=wx.Point(563, 129), size=wx.Size(708, 634),
-              style=wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN,
+    
+        #-----Main frame-----
+        wx.Frame.__init__(self, id=wxID_FRAME1, name='', parent=prnt, 
+              style=wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.RESIZE_BORDER,
               title='SWAPY - Simple Windows Automation on Python. v %s' % const.VERSION)
         self.SetIcon(wx.Icon(proxy.resource_path("swapy_dog_head.ico"),
               wx.BITMAP_TYPE_ICO))
-        self.SetClientSize(wx.Size(700, 600))
-
+              
+        self.Bind(wx.EVT_MENU, self.menu_action) # - make action
+        #----------
+              
+        #-----Static Boxes-----
         self.staticBox_ObjectsBrowser = wx.StaticBox(id=wxID_FRAME1STATICBOX_OBJECTSBROWSER,
               label='Objects browser', name='staticBox_ObjectsBrowser',
-              parent=self, pos=wx.Point(5, 5), size=wx.Size(340, 590), style=0)
+              parent=self)
 
         self.staticBox_Editor = wx.StaticBox(id=wxID_FRAME1STATICBOX_EDITOR,
-              label='Editor', name='staticBox_Editor', parent=self,
-              pos=wx.Point(355, 5), size=wx.Size(340, 290), style=0)
-
+              label='Editor', name='staticBox_Editor', parent=self,)
+              
         self.staticBox_Proprties = wx.StaticBox(id=wxID_FRAME1STATICBOX_PROPRTIES,
-              label='Properties', name='staticBox_Proprties', parent=self,
-              pos=wx.Point(355, 305), size=wx.Size(340, 290), style=0)
-
+              label='Properties', name='staticBox_Proprties', parent=self)
+        #----------
+              
+        #-----ObjectsBrowser-----
         self.treeCtrl_ObjectsBrowser = wx.TreeCtrl(id=wxID_FRAME1TREECTRL_OBJECTSBROWSER,
-              name='treeCtrl_ObjectsBrowser', parent=self, pos=wx.Point(10, 20),
-              size=wx.Size(330, 570), style=wx.TR_HAS_BUTTONS)
+              name='treeCtrl_ObjectsBrowser', parent=self, style=wx.TR_HAS_BUTTONS)
+              
         self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_SEL_CHANGED,
               self.OnTreeCtrl1TreeSelChanged, id=wxID_FRAME1TREECTRL_OBJECTSBROWSER)
+              
         self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.ObjectsBrowserRight_Click)
-        self.Bind(wx.EVT_MENU, self.menu_action) # - make action
-        #self.treeCtrl_ObjectsBrowser.SetLabel('Shows windows, controls hierarchy')
-
-        self.textCtrl_Editor = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL_EDITOR,
-              name='textCtrl_Editor', parent=self, pos=wx.Point(360, 20),
-              size=wx.Size(330, 270), style=wx.TE_MULTILINE | wx.TE_READONLY, value='')
         
-        #self.textCtrl_Editor.SetLabel('Code editor')
-
+        self.treeCtrl_ObjectsBrowser.SetLabel('Shows windows, controls hierarchy')
+        #----------
+        
+        #-----Editor-----
+        self.textCtrl_Editor = wx.TextCtrl(id=wxID_FRAME1TEXTCTRL_EDITOR,
+              name='textCtrl_Editor', parent=self, style=wx.TE_MULTILINE | wx.TE_READONLY, value='')
+        
+        self.textCtrl_Editor.SetInitialSize((300,250))
+        
+        self.textCtrl_Editor.SetLabel('Code editor')
+        #----------
+        
+        #-----Properties-----
         self.listCtrl_Properties = wx.ListCtrl(id=wxID_FRAME1LISTCTRL1_PROPERTIES, name='listCtrl1_Properties',
-              parent=self, pos=wx.Point(360, 320), size=wx.Size(330, 270),
-              style=wx.LC_REPORT)
+              parent=self, style=wx.LC_REPORT)
+              
         self.listCtrl_Properties.InsertColumn(col=0, format=wx.LIST_FORMAT_LEFT,
               heading='Property', width=-1)
+              
         self.listCtrl_Properties.InsertColumn(col=1, format=wx.LIST_FORMAT_LEFT,
               heading='Value', width=-1)
+              
         self.listCtrl_Properties.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,
               self.OnlistCtrl_PropertiesListItemRightClick, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
+              
         self.listCtrl_Properties.Bind(wx.EVT_LEFT_DCLICK, self.Refresh, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
+        #----------
+        
+        #-----Sizers-----
+        staticBox_ObjectsBrowser_sizer = wx.StaticBoxSizer(self.staticBox_ObjectsBrowser)
+        staticBox_ObjectsBrowser_sizer.Add(self.treeCtrl_ObjectsBrowser, 1, wx.EXPAND, 2)
+        
+        staticBox_Editor_sizer = wx.StaticBoxSizer(self.staticBox_Editor)
+        staticBox_Editor_sizer.Add(self.textCtrl_Editor, 1, wx.EXPAND, 2)
+        
+        staticBox_Proprties_sizer = wx.StaticBoxSizer(self.staticBox_Proprties)
+        staticBox_Proprties_sizer.Add(self.listCtrl_Properties, 1, wx.EXPAND, 2)
+        
+        sizer_h = wx.BoxSizer(wx.HORIZONTAL)
+        sizer_v = wx.BoxSizer(wx.VERTICAL)
+                
+        sizer_h.Add(staticBox_ObjectsBrowser_sizer, 1, wx.EXPAND, 2)
+        sizer_h.Add(sizer_v, 1, wx.EXPAND|wx.ALL, 2)
+        sizer_v.Add(staticBox_Editor_sizer, 1, wx.EXPAND, 2)
+        sizer_v.Add(staticBox_Proprties_sizer, 1, wx.EXPAND, 2)
+        
+        self.SetSizerAndFit(sizer_h)
+        #----------
 
     def __init__(self, parent):
         self._init_ctrls(parent)
