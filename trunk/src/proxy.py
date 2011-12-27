@@ -85,11 +85,15 @@ class SWAPYObject(object):
             c_name = ', '.join(texts)
             if not c_name:
                 c_name = 'Unknow control name1!'
-            c_name_str = unicode(c_name)
-            subitems.append((c_name_str, self._get_swapy_object(control)))
+            subitems.append((c_name, self._get_swapy_object(control)))
         subitems += self._get_additional_children()
         subitems.sort(key=self.subitems_sort_key)
-        return subitems
+        #encode names
+        subitems_encoded = []
+        for (name, obj) in subitems:
+            name = name.encode('cp1251', 'replace')
+            subitems_encoded.append((name, obj))
+        return subitems_encoded
         
     def Exec_action(self, action_id):
         '''
@@ -210,6 +214,8 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
             return 'menu'
         elif type(obj) == pywinauto.controls.menuwrapper.MenuItem:
             return 'menu_item'
+        elif type(obj) == pywinauto.controls.win32_controls.ComboBoxWrapper:
+            return 'combobox'
         elif 1==0:
             return 'other'
         else:
@@ -226,6 +232,8 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
             return Pwa_menu(pwa_obj)
         if pwa_type == 'menu_item':
             return Pwa_menu_item(pwa_obj)
+        if pwa_type == 'combobox':
+            return Pwa_combobox(pwa_obj)
         else:
             return SWAPYObject(pwa_obj)
             
@@ -261,7 +269,7 @@ class PC_system(SWAPYObject):
         windows.sort(key=lambda name: name[0].lower())
         return windows
 
-    def GetProperties(self):
+    def _get_properies(self):
         info = { 'Platform' : platform.platform(), \
                 'Processor' : platform.processor(), \
                 'PC name' : platform.node() }
@@ -382,4 +390,36 @@ window.MenuItem(u'"+self.get_menuitems_path().encode('unicode-escape', 'replace'
 "
         return code
         
+class Pwa_combobox(SWAPYObject):
+    def _get_additional_children(self):
+        '''
+        Add ComboBox items as children
+        '''
+        additional_children = []
+        items_texts = self.pwa_obj.ItemTexts()
+        for item_name in items_texts:
+            additional_children += [(item_name, self.virtual_combobox_item(self.pwa_obj, item_name))]
+        return additional_children
+    
+    class virtual_combobox_item(SWAPYObject):
+        def __init__(self, parent, name):
+            self.parent = parent
+            self.name = name
+            self.pwa_obj = self
+            
+        def Select(self):
+            self.parent.Select(self.name)
+            
+        def GetProperties(self):
+            return {}
         
+        def Get_subitems(self):
+            return []
+            
+        def Highlight_control(self): 
+            pass
+            return 0
+            
+        def Get_code(self, action_id):
+        
+          return ''
