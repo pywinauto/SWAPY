@@ -70,8 +70,6 @@ class Frame1(wx.Frame):
               self.OnTreeCtrl1TreeSelChanged, id=wxID_FRAME1TREECTRL_OBJECTSBROWSER)
               
         self.treeCtrl_ObjectsBrowser.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.ObjectsBrowserRight_Click)
-        
-        self.treeCtrl_ObjectsBrowser.SetLabel('Shows windows, controls hierarchy')
         #----------
         
         #-----Editor-----
@@ -79,8 +77,6 @@ class Frame1(wx.Frame):
               name='textCtrl_Editor', parent=self, style=wx.TE_MULTILINE | wx.TE_READONLY, value='')
         
         self.textCtrl_Editor.SetInitialSize((300,250))
-        
-        self.textCtrl_Editor.SetLabel('Code editor')
         #----------
         
         #-----Properties-----
