@@ -216,6 +216,8 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
             return 'menu_item'
         elif type(obj) == pywinauto.controls.win32_controls.ComboBoxWrapper:
             return 'combobox'
+        elif type(obj) == pywinauto.controls.common_controls.ToolbarWrapper:
+            return 'toolbar'
         elif 1==0:
             return 'other'
         else:
@@ -234,6 +236,8 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
             return Pwa_menu_item(pwa_obj)
         if pwa_type == 'combobox':
             return Pwa_combobox(pwa_obj)
+        if pwa_type == 'toolbar':
+            return Pwa_toolbar(pwa_obj)
         else:
             return SWAPYObject(pwa_obj)
             
@@ -253,6 +257,8 @@ class PC_system(SWAPYObject):
         '''
         returns [(window_text, swapy_obj),...]
         '''
+        subitems = []
+        #windows--------------------
         windows = []
         app = pywinauto.application.Application()
         handles = pywinauto.findwindows.find_windows(title_re='.*')
@@ -267,7 +273,13 @@ class PC_system(SWAPYObject):
             title = unicode(title)
             windows.append((title, self._get_swapy_object(wind)))
         windows.sort(key=lambda name: name[0].lower())
-        return windows
+        #-----------------------
+        
+        #taskbar----------------
+        from pywinauto import taskbar
+        taskbar = [('TaskBar', self._get_swapy_object(taskbar.TaskBar))]
+        #------------------------
+        return windows + taskbar
 
     def _get_properies(self):
         info = { 'Platform' : platform.platform(), \
@@ -423,3 +435,24 @@ class Pwa_combobox(SWAPYObject):
         def Get_code(self, action_id):
         
           return ''
+          
+class Pwa_toolbar(SWAPYObject):
+
+    def _get_additional_children(self):
+        '''
+        Add button objects as children
+        '''
+        additional_children = []
+        buttons_count = self.pwa_obj.ButtonCount()
+        for button_index in range(buttons_count):
+            button_text = self.pwa_obj.Button(button_index).info.text
+            button_item = [(button_text, self._get_swapy_object(self.pwa_obj.Button(button_index)))]
+            additional_children += button_item
+        return additional_children
+        
+    def _get_children(self):
+        '''
+        Return original pywinauto's object children
+        
+        '''
+        return []
