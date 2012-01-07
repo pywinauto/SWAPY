@@ -92,7 +92,7 @@ class Frame1(wx.Frame):
         self.listCtrl_Properties.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK,
               self.OnlistCtrl_PropertiesListItemRightClick, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
               
-        self.listCtrl_Properties.Bind(wx.EVT_LEFT_DCLICK, self.Refresh, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
+        #self.listCtrl_Properties.Bind(wx.EVT_LEFT_DCLICK, self.Refresh, id=wxID_FRAME1LISTCTRL1_PROPERTIES)
         #----------
         
         #-----Sizers-----
@@ -160,10 +160,10 @@ class Frame1(wx.Frame):
         menu.Append(203, 'Copy value')
         self.PopupMenu(menu)     
         menu.Destroy() 
-    
+    '''
     def Refresh(self, event):
         self._refresh_windows_tree()
-    
+    '''
     def menu_action(self, event):
         id = event.Id
         #print id

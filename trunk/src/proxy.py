@@ -24,6 +24,7 @@ import wx
 import thread
 import exceptions
 import platform
+import warnings
 from const import *
 
 '''
@@ -132,7 +133,7 @@ window."+action+"()\n\
 "
         else:
             code = "\
-window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\n\
+window['"+self._get_additional_properties()['Access names'][0].encode('unicode-escape', 'replace')+"']."+action+"()\n\
 "
         return code
         
@@ -216,8 +217,14 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
             return 'menu_item'
         elif type(obj) == pywinauto.controls.win32_controls.ComboBoxWrapper:
             return 'combobox'
+        elif type(obj) == pywinauto.controls.common_controls.ListViewWrapper:
+            return 'listview'
+        elif type(obj) == pywinauto.controls.common_controls.TabControlWrapper:
+            return 'tab'
         elif type(obj) == pywinauto.controls.common_controls.ToolbarWrapper:
             return 'toolbar'
+        elif type(obj) == pywinauto.controls.common_controls._toolbar_button:
+            return 'toolbar_button'
         elif 1==0:
             return 'other'
         else:
@@ -236,8 +243,14 @@ window['"+self._get_additional_properties()['Access names'][0]+"']."+action+"()\
             return Pwa_menu_item(pwa_obj)
         if pwa_type == 'combobox':
             return Pwa_combobox(pwa_obj)
+        if pwa_type == 'listview':
+            return Pwa_listview(pwa_obj)
+        if pwa_type == 'tab':
+            return Pwa_tab(pwa_obj)
         if pwa_type == 'toolbar':
             return Pwa_toolbar(pwa_obj)
+        if pwa_type == 'toolbar_button':
+            return Pwa_toolbar_button(pwa_obj)
         else:
             return SWAPYObject(pwa_obj)
             
@@ -257,16 +270,22 @@ class PC_system(SWAPYObject):
         '''
         returns [(window_text, swapy_obj),...]
         '''
-        subitems = []
         #windows--------------------
         windows = []
         app = pywinauto.application.Application()
         handles = pywinauto.findwindows.find_windows(title_re='.*')
+        #we have to find taskbar in windows list
+        warnings.filterwarnings("ignore", category=FutureWarning) #ignore future warning in taskbar module
+        from pywinauto import taskbar
+        taskbar_handle = taskbar.TaskBarHandle()
         for w_handle in handles:
             wind = app.window_(handle=w_handle)
-            texts = wind.Texts()
+            if w_handle == taskbar_handle:
+                texts = ['TaskBar']
+            else:
+                texts = wind.Texts()
             while texts.count(''):
-              texts.remove('')
+                texts.remove('')
             title = ', '.join(texts)
             if not title:
                 title = 'Unknow title!'
@@ -275,11 +294,9 @@ class PC_system(SWAPYObject):
         windows.sort(key=lambda name: name[0].lower())
         #-----------------------
         
-        #taskbar----------------
-        from pywinauto import taskbar
-        taskbar = [('TaskBar', self._get_swapy_object(taskbar.TaskBar))]
+        #smt new----------------
         #------------------------
-        return windows + taskbar
+        return windows
 
     def _get_properies(self):
         info = { 'Platform' : platform.platform(), \
@@ -410,31 +427,111 @@ class Pwa_combobox(SWAPYObject):
         additional_children = []
         items_texts = self.pwa_obj.ItemTexts()
         for item_name in items_texts:
-            additional_children += [(item_name, self.virtual_combobox_item(self.pwa_obj, item_name))]
+            additional_children += [(item_name, virtual_combobox_item(self.pwa_obj, item_name))]
         return additional_children
     
-    class virtual_combobox_item(SWAPYObject):
-        def __init__(self, parent, name):
-            self.parent = parent
-            self.name = name
-            self.pwa_obj = self
-            
-        def Select(self):
-            self.parent.Select(self.name)
-            
-        def GetProperties(self):
-            return {}
+class virtual_combobox_item(SWAPYObject):
+    def __init__(self, parent, name):
+        self.parent = parent
+        self.name = name
+        self.pwa_obj = self
         
-        def Get_subitems(self):
-            return []
-            
-        def Highlight_control(self): 
-            pass
-            return 0
-            
-        def Get_code(self, action_id):
+    def Select(self):
+        self.parent.Select(self.name)
         
-          return ''
+    def _get_properies(self):
+        index = None
+        text = self.name
+        for i, name in enumerate(self.parent.ItemTexts()):
+            if name == self.name:
+                index = i
+                break
+        return {'Index' : index, 'Text' : text.encode('unicode-escape', 'replace')}
+    
+    def Get_subitems(self):
+        return []
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+        
+    def Get_code(self, action_id):
+        
+        return '#---Not implemented yet.---\n'
+          
+class Pwa_listview(SWAPYObject):
+    def _get_additional_children(self):
+        '''
+        Add SysListView32 items as children
+        '''
+        additional_children = []
+        for index in range(self.pwa_obj.ItemCount()):
+            item = self.pwa_obj.GetItem(index)
+            additional_children += [(item['text'], virtual_listview_item(self.pwa_obj, index))]
+        return additional_children
+    
+class virtual_listview_item(SWAPYObject):
+    def __init__(self, parent, index):
+        self.parent = parent
+        self.index = index
+        self.pwa_obj = self
+        
+    def Select(self):
+        self.parent.Select(self.index)
+        
+    def _get_properies(self):
+        item_properties = {'Index' : self.index}
+        for index, item_props in enumerate(self.parent.Items()):
+            if index == self.index:
+                item_properties.update(item_props)
+                break
+        return item_properties
+    
+    def Get_subitems(self):
+        return []
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+        
+    def Get_code(self, action_id):
+        
+        return '#---Not implemented yet.---\n'
+          
+class Pwa_tab(SWAPYObject):
+    def _get_additional_children(self):
+        '''
+        Add TabControl items as children
+        '''
+        additional_children = []
+        for index in range(self.pwa_obj.TabCount()):
+            text = self.pwa_obj.GetTabText(index)
+            additional_children += [(text, virtual_tab_item(self.pwa_obj, index))]
+        return additional_children
+    
+class virtual_tab_item(SWAPYObject):
+    def __init__(self, parent, index):
+        self.parent = parent
+        self.index = index
+        self.pwa_obj = self
+        
+    def Select(self):
+        self.parent.Select(self.index)
+        
+    def _get_properies(self):
+        item_properties = {'Index' : self.index}
+        return item_properties
+    
+    def Get_subitems(self):
+        return []
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+        
+    def Get_code(self, action_id):
+        
+        return '#---Not implemented yet.---\n'
           
 class Pwa_toolbar(SWAPYObject):
 
@@ -456,3 +553,29 @@ class Pwa_toolbar(SWAPYObject):
         
         '''
         return []
+        
+class Pwa_toolbar_button(SWAPYObject):
+
+    def _get_children(self):
+        return []
+        
+    def _get_properies(self):
+        o = self.pwa_obj
+        props = {'IsCheckable' : o.IsCheckable(),
+                 'IsChecked' : o.IsChecked(),
+                 'IsEnabled': o.IsEnabled(),
+                 'IsPressable' : o.IsPressable(),
+                 'IsPressed' : o.IsPressed(),
+                 'Rectangle' : o.Rectangle(),
+                 'State' : o.State(),
+                 'Style' : o.Style(),
+                 'index' : o.index,}
+        return props
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+        
+    def Get_code(self, action_id):
+        
+        return '#---Not implemented yet.---\n'
