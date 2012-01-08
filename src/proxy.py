@@ -126,16 +126,9 @@ class SWAPYObject(object):
         Generate code for pywinauto module
         '''
         action = ACTIONS[action_id]
-        if self._get_pywinobj_type(self.pwa_obj) == 'window':
-            code = "\
-w_handle = pywinauto.findwindows.find_windows(title_re=u'"+ self.pwa_obj.WindowText().encode('unicode-escape', 'replace') +"', class_name='"+ self.pwa_obj.Class() +"')[0]\n\
-window = pwa_app.window_(handle=w_handle)\n\
-window."+action+"()\n\
-"
-        else:
-            code = "\
-window['"+self._get_additional_properties()['Access names'][0].encode('unicode-escape', 'replace')+"']."+action+"()\n\
-"
+        code = "\
+ctrl = window['"+self._get_additional_properties()['Access names'][0].encode('unicode-escape', 'replace')+"']\n\
+ctrl."+action+"()\n"
         return code
         
     def Highlight_control(self): 
@@ -285,7 +278,21 @@ class VirtualSWAPYObject(SWAPYObject):
         
     def Select(self):
         self.parent.pwa_obj.Select(self.index)
-        
+    
+    def Get_code(self, action_id):
+        '''
+        Generate code for pywinauto module
+        '''
+        action = ACTIONS[action_id]
+        arg = ""
+        try:
+            arg = "'"+self.index.encode('unicode-escape', 'replace')+"'"
+        except:
+            arg = str(self.index)
+        code = "\
+ctrl."+action+"("+arg+")\n"
+        return code
+    
     def _get_properies(self):
         return {}
     
@@ -295,11 +302,11 @@ class VirtualSWAPYObject(SWAPYObject):
     def Highlight_control(self): 
         pass
         return 0
-        
+    '''
     def Get_code(self, action_id):
         
         return '#---Not implemented yet.---\n'
-          
+    '''
         
     
 class PC_system(SWAPYObject):
@@ -344,14 +351,6 @@ class PC_system(SWAPYObject):
                 
         return info
         
-    def Exec_action(self, action_id):
-        '''
-        Execute action on the control
-        '''
-        action = ACTIONS[action_id]
-        exec('self.pwa_obj.'+action+'()')
-        return 0
-        
     def Get_actions(self):
         '''
         No actions for PC_system
@@ -379,6 +378,17 @@ class Pwa_window(SWAPYObject):
             menu_child = [('!Menu', self._get_swapy_object(menu))]
             additional_children += menu_child
         return additional_children
+        
+    def Get_code(self, action_id):
+        '''
+        winod code
+        '''
+        action = ACTIONS[action_id]
+        code = "\
+w_handle = pywinauto.findwindows.find_windows(title_re=u'"+ self.pwa_obj.WindowText().encode('unicode-escape', 'replace') +"', class_name='"+ self.pwa_obj.Class() +"')[0]\n\
+window = pwa_app.window_(handle=w_handle)\n\
+window."+action+"()\n"
+        return code
         
 class Pwa_menu(SWAPYObject):
 
@@ -485,7 +495,7 @@ class virtual_combobox_item(VirtualSWAPYObject):
                 index = i
                 break
         return {'Index' : index, 'Text' : text.encode('unicode-escape', 'replace')}
-
+        
 class Pwa_listview(SWAPYObject):
     def _get_additional_children(self):
         '''
@@ -576,5 +586,11 @@ class Pwa_toolbar_button(SWAPYObject):
         return 0
         
     def Get_code(self, action_id):
-        
-        return '#---Not implemented yet.---\n'
+        '''
+        Generate code for pywinauto module
+        '''
+        action = ACTIONS[action_id]
+        arg = str(self.pwa_obj.index)
+        code = "\
+ctrl.Button("+arg+")."+action+"()\n"
+        return code
