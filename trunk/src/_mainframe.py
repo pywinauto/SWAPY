@@ -145,6 +145,8 @@ class Frame1(wx.Frame):
         if actions:
             for id, action_name in actions:
                 menu.Append(id, action_name)
+                if not obj.is_visible:
+                    menu.Enable(id, False)
         else:
             menu.Append(0, 'No actions')
             menu.Enable(0, False)
@@ -260,7 +262,9 @@ class Frame1(wx.Frame):
         for i_name, i_obj in subitems:
             item_data = wx.TreeItemData()
             item_data.SetData(i_obj)
-            self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)  
+            item_id = self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)
+            if not i_obj.is_visible:
+                self.treeCtrl_ObjectsBrowser.SetItemTextColour(item_id,'gray')
             del item_data
 
 
