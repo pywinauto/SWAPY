@@ -57,6 +57,7 @@ class SWAPYObject(object):
         self.pwa_obj = pwa_obj
         default_sort_key = lambda name: name[0].lower()
         self.subitems_sort_key = default_sort_key
+        self.is_visible = self._check_visibility()
         
     def GetProperties(self):
         '''
@@ -263,6 +264,44 @@ window['"+self._get_additional_properties()['Access names'][0].encode('unicode-e
             time.sleep(0.2)
         return 0
         
+    def _check_visibility(self):
+        '''
+        Check control/window visibility.
+        Return pwa.IsVisible() or False if fails
+        '''
+        is_visible = False
+        try:
+            is_visible = self.pwa_obj.IsVisible()
+        except:
+            pass
+        return is_visible
+
+class VirtualSWAPYObject(SWAPYObject):
+    def __init__(self, parent, index):
+        self.parent = parent
+        self.index = index
+        self.pwa_obj = self
+        self.is_visible = self.parent.is_visible
+        
+    def Select(self):
+        self.parent.pwa_obj.Select(self.index)
+        
+    def _get_properies(self):
+        return {}
+    
+    def Get_subitems(self):
+        return []
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+        
+    def Get_code(self, action_id):
+        
+        return '#---Not implemented yet.---\n'
+          
+        
+    
 class PC_system(SWAPYObject):
     handle = 0
     
@@ -343,6 +382,9 @@ class Pwa_window(SWAPYObject):
         
 class Pwa_menu(SWAPYObject):
 
+    def _check_visibility(self):
+        return True
+
     def _get_additional_children(self):
         '''
         Add submenu object as children
@@ -377,6 +419,9 @@ class Pwa_menu(SWAPYObject):
         return 0
         
 class Pwa_menu_item(Pwa_menu):
+
+    def _check_visibility(self):
+        return True
 
     def _get_additional_children(self):
         '''
@@ -427,38 +472,20 @@ class Pwa_combobox(SWAPYObject):
         additional_children = []
         items_texts = self.pwa_obj.ItemTexts()
         for item_name in items_texts:
-            additional_children += [(item_name, virtual_combobox_item(self.pwa_obj, item_name))]
+            additional_children += [(item_name, virtual_combobox_item(self, item_name))]
         return additional_children
     
-class virtual_combobox_item(SWAPYObject):
-    def __init__(self, parent, name):
-        self.parent = parent
-        self.name = name
-        self.pwa_obj = self
-        
-    def Select(self):
-        self.parent.Select(self.name)
-        
+class virtual_combobox_item(VirtualSWAPYObject):
+
     def _get_properies(self):
         index = None
-        text = self.name
-        for i, name in enumerate(self.parent.ItemTexts()):
-            if name == self.name:
+        text = self.index
+        for i, name in enumerate(self.parent.pwa_obj.ItemTexts()):
+            if name == text:
                 index = i
                 break
         return {'Index' : index, 'Text' : text.encode('unicode-escape', 'replace')}
-    
-    def Get_subitems(self):
-        return []
-        
-    def Highlight_control(self): 
-        pass
-        return 0
-        
-    def Get_code(self, action_id):
-        
-        return '#---Not implemented yet.---\n'
-          
+
 class Pwa_listview(SWAPYObject):
     def _get_additional_children(self):
         '''
@@ -467,37 +494,19 @@ class Pwa_listview(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.ItemCount()):
             item = self.pwa_obj.GetItem(index)
-            additional_children += [(item['text'], virtual_listview_item(self.pwa_obj, index))]
+            additional_children += [(item['text'], virtual_listview_item(self, index))]
         return additional_children
     
-class virtual_listview_item(SWAPYObject):
-    def __init__(self, parent, index):
-        self.parent = parent
-        self.index = index
-        self.pwa_obj = self
-        
-    def Select(self):
-        self.parent.Select(self.index)
-        
+class virtual_listview_item(VirtualSWAPYObject):
+
     def _get_properies(self):
         item_properties = {'Index' : self.index}
-        for index, item_props in enumerate(self.parent.Items()):
+        for index, item_props in enumerate(self.parent.pwa_obj.Items()):
             if index == self.index:
                 item_properties.update(item_props)
                 break
         return item_properties
-    
-    def Get_subitems(self):
-        return []
-        
-    def Highlight_control(self): 
-        pass
-        return 0
-        
-    def Get_code(self, action_id):
-        
-        return '#---Not implemented yet.---\n'
-          
+
 class Pwa_tab(SWAPYObject):
     def _get_additional_children(self):
         '''
@@ -506,33 +515,15 @@ class Pwa_tab(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
-            additional_children += [(text, virtual_tab_item(self.pwa_obj, index))]
+            additional_children += [(text, virtual_tab_item(self, index))]
         return additional_children
     
-class virtual_tab_item(SWAPYObject):
-    def __init__(self, parent, index):
-        self.parent = parent
-        self.index = index
-        self.pwa_obj = self
-        
-    def Select(self):
-        self.parent.Select(self.index)
-        
+class virtual_tab_item(VirtualSWAPYObject):
+
     def _get_properies(self):
         item_properties = {'Index' : self.index}
         return item_properties
-    
-    def Get_subitems(self):
-        return []
-        
-    def Highlight_control(self): 
-        pass
-        return 0
-        
-    def Get_code(self, action_id):
-        
-        return '#---Not implemented yet.---\n'
-          
+
 class Pwa_toolbar(SWAPYObject):
 
     def _get_additional_children(self):
@@ -555,7 +546,15 @@ class Pwa_toolbar(SWAPYObject):
         return []
         
 class Pwa_toolbar_button(SWAPYObject):
-
+    
+    def _check_visibility(self):
+        is_visible = False
+        try:
+            is_visible = self.pwa_obj.toolbar_ctrl.IsVisible()
+        except:
+            pass
+        return is_visible
+        
     def _get_children(self):
         return []
         
