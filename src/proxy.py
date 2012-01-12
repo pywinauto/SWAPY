@@ -155,7 +155,8 @@ ctrl."+action+"()\n"
         additional_properties = {}
         #-----Access names
         try:
-            parent_obj = self.pwa_obj.Parent()
+            #parent_obj = self.pwa_obj.Parent()
+            parent_obj = self.pwa_obj.TopLevelParent()
         except:
             pass
         else:
