@@ -220,6 +220,10 @@ ctrl."+action+"()\n"
             return 'toolbar'
         elif type(obj) == pywinauto.controls.common_controls._toolbar_button:
             return 'toolbar_button'
+        elif type(obj) == pywinauto.controls.common_controls.TreeViewWrapper:
+            return 'tree_view'
+        elif type(obj) == pywinauto.controls.common_controls._treeview_element:
+            return 'tree_item'
         elif 1==0:
             return 'other'
         else:
@@ -246,6 +250,10 @@ ctrl."+action+"()\n"
             return Pwa_toolbar(pwa_obj)
         if pwa_type == 'toolbar_button':
             return Pwa_toolbar_button(pwa_obj)
+        if pwa_type == 'tree_view':
+            return Pwa_tree(pwa_obj)
+        if pwa_type == 'tree_item':
+            return Pwa_tree_item(pwa_obj)
         else:
             return SWAPYObject(pwa_obj)
             
@@ -595,3 +603,67 @@ class Pwa_toolbar_button(SWAPYObject):
         code = "\
 ctrl.Button("+arg+")."+action+"()\n"
         return code
+        
+class Pwa_tree(SWAPYObject):
+
+    def _get_additional_children(self):
+        '''
+        Add roots object as children
+        '''
+        
+        additional_children = []
+        roots = self.pwa_obj.Roots()
+        for root in roots:
+            root_text = root.Text()
+            obj = self._get_swapy_object(root)
+            obj.path = [root_text]
+            root_item = [(root_text, obj)]
+            additional_children += root_item
+        return additional_children
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+
+class Pwa_tree_item(SWAPYObject):
+
+    def _get_properies(self):
+        o = self.pwa_obj
+        props = {'Rectangle' : o.Rectangle(),
+                 'State' : o.State(),
+                 'Text' : o.Text(),}
+        return props
+
+    def _check_visibility(self):
+        return True
+        
+    def _get_children(self):
+        return []
+        
+    def Highlight_control(self): 
+        pass
+        return 0
+    
+    def _get_additional_children(self):
+        '''
+        Add sub tree items object as children
+        '''
+        
+        additional_children = []
+        sub_items = self.pwa_obj.Children()
+        for item in sub_items:
+            item_text = item.Text()
+            obj = self._get_swapy_object(item)
+            obj.path = self.path + [item_text]
+            sub_item = [(item_text, obj)]
+            additional_children += sub_item
+        return additional_children
+    
+    def Get_code(self, action_id):
+        '''
+        Generate code for pywinauto module
+        '''
+        action = ACTIONS[action_id]
+        code = "\
+ctrl.GetItem("+str(self.path)+")."+action+"()\n"
+        return code        

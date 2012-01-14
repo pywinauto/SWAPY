@@ -40,6 +40,8 @@ ACTIONS =  {101 : 'Close',
             119 : 'RightClickInput',
             120 : 'SetFocus',
             121 : 'Select',
+            122 : 'Collapse',
+            123 : 'Expand',
             }
             
 VERSION = '0.4.0'
