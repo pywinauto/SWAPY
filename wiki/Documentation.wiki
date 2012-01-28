@@ -1,7 +1,7 @@
 = Documentation =
 
 swapy-ob consists of three elements:
- * [Object browser#Object browser]
+ * [Documentation]
  * Properties viewer
  * Edit section
 
