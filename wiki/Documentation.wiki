@@ -2,7 +2,11 @@
 
 swapy-ob consists of three elements:
  * [Documentation#Object_browser Object browser]
- * Properties viewer
- * Edit section
+ * [Documentation#Properties_viewer Properties viewer]
+ * [Documentation#Edit_section Edit section]
 
 ==Object browser==
+
+==Properties viewer==
+
+==Edit section==
