@@ -13,5 +13,7 @@ You can access the list of available actions for the selected object. To do this
 Also, you can take action directly from here, simply click on the available action. In this case also it will generate code in the [Documentation#Edit_section Edit section]
 
 ==Properties viewer==
+Displays pywinauto + additional properties of the object.
 
 ==Edit section==
+Prints source code on [http://python.org/ Python] for [http://code.google.com/p/pywinauto/ pywinauto] lib.
