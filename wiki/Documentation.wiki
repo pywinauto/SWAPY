@@ -5,4 +5,41 @@ swapy-ob consists of three elements:
  * Properties viewer
  * Edit section
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ==Object browser==
