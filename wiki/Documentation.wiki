@@ -11,6 +11,7 @@ http://swapy.googlecode.com/files/ob2.jpg
 Shows the hierarchy of objects. PC name - windows - controls -sub controls ... When you select an object it will be highlighted and you will be able see its properties in the [Documentation#Properties_viewer Properties viewer].
 
 You can access the list of available actions for the selected object. To do this, select the object and press the right mouse button.
+http://swapy.googlecode.com/files/act.jpg
 
 Also, you can take action directly from here, simply click on the available action. In this case also it will generate code in the [Documentation#Edit_section Edit section]
 
