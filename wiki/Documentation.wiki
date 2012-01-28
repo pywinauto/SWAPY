@@ -1,45 +1,8 @@
 = Documentation =
 
 swapy-ob consists of three elements:
- * [Documentation#Object_browser]
+ * Object browser[Documentation#Object_browser]
  * Properties viewer
  * Edit section
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ==Object browser==
