@@ -1,0 +1,9 @@
+= Documentation =
+
+swapy-ob consists of three elements:
+ * [Object browser#Object browser]
+ * Properties viewer
+ * Edit section
+
+#Object browser
+==Object browser==
