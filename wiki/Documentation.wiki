@@ -1,4 +1,5 @@
 = Documentation =
+[http://www.youtube.com/watch?v=xaMFHOq_Hls&feature=player_detailpage Simple example video]
 
 swapy-ob consists of three elements:
  * [Documentation#Object_browser Object browser]
