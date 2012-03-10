@@ -244,14 +244,12 @@ class Frame1(wx.Frame):
             #if type(properties[p_name]) == list:
             #    p_values_str = unicode(', '.join(map(unicode ,properties[p_name])))
             #else:
-            p_values_str = unicode(properties[p_name])
-             
-            '''
+
             try:
               p_values_str = str(properties[p_name])
             except exceptions.UnicodeEncodeError:
-                p_values_str = properties[p_name].encode('', 'replace')
-            '''
+              p_values_str = properties[p_name].encode('CP1251','replace')
+            
             index = self.listCtrl_Properties.InsertStringItem(0, p_name_str)
             self.listCtrl_Properties.SetStringItem(index, 1, p_values_str)
             #self.textCtrl_Editor.AppendText(p_values_str)

@@ -344,7 +344,7 @@ class PC_system(SWAPYObject):
             title = ', '.join(texts)
             if not title:
                 title = 'Unknow title!'
-            title = unicode(title)
+            title = title.encode('cp1251', 'replace')
             windows.append((title, self._get_swapy_object(wind)))
         windows.sort(key=lambda name: name[0].lower())
         #-----------------------
