@@ -153,6 +153,7 @@ ctrl."+action+"()\n"
         Can be overridden by derived class
         '''
         additional_properties = {}
+        pwa_app = pywinauto.application.Application()
         #-----Access names
         try:
             #parent_obj = self.pwa_obj.Parent()
@@ -161,14 +162,15 @@ ctrl."+action+"()\n"
             pass
         else:
             try:
-                all_controls = parent_obj.Children()
+                #all_controls = parent_obj.Children()
+                all_controls = [pwa_app.window_(handle=ch) for ch in pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
             except:
                 pass
             else:
                 access_names = []
                 uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
                 for uniq_name, obj in uniq_names.items():
-                    if uniq_name != '' and obj == self.pwa_obj:
+                    if uniq_name != '' and obj.WrapperObject() == self.pwa_obj:
                       access_names.append(uniq_name)
                 access_names.sort(key=len)
                 additional_properties.update({'Access names' : access_names})
