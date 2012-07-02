@@ -44,4 +44,4 @@ ACTIONS =  {101 : 'Close',
             123 : 'Expand',
             }
             
-VERSION = '0.4.1'
+VERSION = '0.4.2'
