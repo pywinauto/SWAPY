@@ -32,7 +32,7 @@ proxy module for pywinauto
 '''
 
 
-pywinauto.timings.Timings.window_find_timeout = 1            
+pywinauto.timings.Timings.window_find_timeout = 1
 
 def resource_path(relative):
     import os
@@ -75,19 +75,26 @@ class SWAPYObject(object):
         Can be owerridden for non pywinauto obects
         '''
         subitems = []
-        children = []
-        children += self._get_children()
+        subitems += self._get_children()
+        '''
         for control in children:
             try:
                 texts = control.Texts()
             except exceptions.RuntimeError:
-                texts = ['Unknow control name2!'] #workaround
+                texts = ['Unknown control name2!'] #workaround
             while texts.count(''):
                 texts.remove('')
             c_name = ', '.join(texts)
             if not c_name:
-                c_name = 'Unknow control name1!'
+                #nontext_controlname = pywinauto.findbestmatch.GetNonTextControlName(control, children)[0]
+                top_level_parent = control.TopLevelParent().Children()
+                nontext_controlname = pywinauto.findbestmatch.GetNonTextControlName(control, top_level_parent)[0]
+                if nontext_controlname:
+                  c_name = nontext_controlname
+                else:
+                  c_name = 'Unknown control name1!'
             subitems.append((c_name, self._get_swapy_object(control)))
+        '''
         subitems += self._get_additional_children()
         subitems.sort(key=self.subitems_sort_key)
         #encode names
@@ -190,10 +197,36 @@ ctrl."+action+"()\n"
         
     def _get_children(self):
         '''
-        Return original pywinauto's object children
-        
+        Return original pywinauto's object children & names
+        [(control_text, swapy_obj),...]
         '''
-        return self.pwa_obj.Children()
+        def _get_name_control(control):
+          texts = control.Texts()
+          while texts.count(''):
+            texts.remove('')
+          text = ', '.join(texts)
+          if not text:
+            u_names = []
+            for uniq_name, obj in uniq_names.items():
+              if uniq_name != '' and obj.WrapperObject() == control:
+                u_names.append(uniq_name)
+            if u_names:
+              u_names.sort(key=len)
+              name = u_names[-1]
+            else:
+              name = 'Unknown control name1!'
+          else:
+            name = text
+          return (name, self._get_swapy_object(control))
+        
+        pwa_app = pywinauto.application.Application()
+        parent_obj = self.pwa_obj.TopLevelParent()
+        children = self.pwa_obj.Children()
+        visible_controls = [pwa_app.window_(handle=ch) for ch in pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
+        uniq_names = pywinauto.findbestmatch.build_unique_dict(visible_controls)
+        names_children = map(_get_name_control, children)
+        return names_children
+        
         
     def _get_additional_children(self):
         '''
@@ -345,7 +378,7 @@ class PC_system(SWAPYObject):
                 texts.remove('')
             title = ', '.join(texts)
             if not title:
-                title = 'Unknow title!'
+                title = 'Window#%s' % w_handle
             title = title.encode('cp1251', 'replace')
             windows.append((title, self._get_swapy_object(wind)))
         windows.sort(key=lambda name: name[0].lower())
