@@ -201,7 +201,10 @@ ctrl."+action+"()\n"
         [(control_text, swapy_obj),...]
         '''
         def _get_name_control(control):
-          texts = control.Texts()
+          try:
+              texts = control.Texts()
+          except exceptions.WindowsError:
+            texts = ['Unknown control name2!'] #workaround for WindowsError: [Error 0] ...
           while texts.count(''):
             texts.remove('')
           text = ', '.join(texts)
@@ -209,6 +212,7 @@ ctrl."+action+"()\n"
             u_names = []
             for uniq_name, obj in uniq_names.items():
               if uniq_name != '' and obj.WrapperObject() == control:
+              #if uniq_name != '' and obj == control:
                 u_names.append(uniq_name)
             if u_names:
               u_names.sort(key=len)
@@ -224,6 +228,7 @@ ctrl."+action+"()\n"
         children = self.pwa_obj.Children()
         visible_controls = [pwa_app.window_(handle=ch) for ch in pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
         uniq_names = pywinauto.findbestmatch.build_unique_dict(visible_controls)
+        #uniq_names = pywinauto.findbestmatch.build_unique_dict(children)
         names_children = map(_get_name_control, children)
         return names_children
         
