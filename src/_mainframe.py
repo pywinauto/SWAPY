@@ -24,6 +24,7 @@ import wx
 import proxy
 import exceptions
 import const
+import thread
 
 def create(parent):
     return Frame1(parent)
@@ -118,21 +119,17 @@ class Frame1(wx.Frame):
 
     def __init__(self, parent):
         self._init_ctrls(parent)
-        self._refresh_windows_tree()   
+        self._init_windows_tree()   
         self.textCtrl_Editor.AppendText('import pywinauto\n\n')
         self.textCtrl_Editor.AppendText('pwa_app = pywinauto.application.Application()\n')
+        self.prop_updater = prop_viewer_updater(self.listCtrl_Properties)
+        self.tree_updater = tree_updater(self.treeCtrl_ObjectsBrowser)
         
-
     def OnTreeCtrl1TreeSelChanged(self, event):
-        #the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
         tree_item = event.GetItem()
-        #parent_item = self.treeCtrl_ObjectsBrowser.GetItemParent(tree_item)
-        #parent_obj = self.treeCtrl_ObjectsBrowser.GetItemData(parent_item).GetData()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        #self._set_prorerties(parent_obj, obj)
-        self._set_prorerties(obj)
-        self._add_subitems(tree_item, obj)
-        self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
+        self.prop_updater.props_update(obj)
+        self.tree_updater.tree_update(tree_item, obj)
         obj.Highlight_control()
                     
     def ObjectsBrowserRight_Click(self, event):
@@ -162,10 +159,7 @@ class Frame1(wx.Frame):
         menu.Append(203, 'Copy value')
         self.PopupMenu(menu)     
         menu.Destroy() 
-    '''
-    def Refresh(self, event):
-        self._refresh_windows_tree()
-    '''
+
     def menu_action(self, event):
         id = event.Id
         #print id
@@ -211,7 +205,7 @@ class Frame1(wx.Frame):
         self.textCtrl_Editor.AppendText(obj.Get_code(menu_id))
         obj.Exec_action(menu_id)
         
-    def _refresh_windows_tree(self):
+    def _init_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
         item_data = wx.TreeItemData()
         root_obj = proxy.PC_system(None)
@@ -220,49 +214,88 @@ class Frame1(wx.Frame):
         #self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
         del item_data
         #the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
-        '''
-        for (w_title, w_obj) in proxy._get_windows():
-            #print w_title
-            sub_item_data = wx.TreeItemData()
-            sub_item_data.SetData(w_obj)
-            self.treeCtrl_ObjectsBrowser.AppendItem(the_root,w_title,data = sub_item_data)
-            #self.textCtrl_Editor.AppendText(w_title)
-            del sub_item_data
-        '''
         self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
+
+class prop_viewer_updater(object):
+    def __init__(self, listctrl):
+        self.listctrl = listctrl
+        self.updating = False
+        self.queue = []
+        
+    def props_update(self, obj):
+        self.queue.append(obj)
+        if self.updating:
+            return 0 
+        else:
+            thread.start_new_thread(self._update,())
             
-    def _set_prorerties(self, obj):
-        #self.listBox_Properties.Clear()
-        self.listCtrl_Properties.DeleteAllItems()
+    def _update(self):
+        self.updating = True
+        obj = self.queue[-1]
+        self.listctrl.DeleteAllItems()
+        index = self.listctrl.InsertStringItem(0, 'Updating...')
+        self.listctrl.SetStringItem(index, 1, '')
         properties = obj.GetProperties()
-        #properties.update(proxy._get_additional_properties(obj))
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower(), reverse=True)
-        #print len(param_names)
-        for p_name in param_names:
-            p_name_str = str(p_name)
-            #if type(properties[p_name]) == list:
-            #    p_values_str = unicode(', '.join(map(unicode ,properties[p_name])))
-            #else:
-
-            try:
-              p_values_str = str(properties[p_name])
-            except exceptions.UnicodeEncodeError:
-              p_values_str = properties[p_name].encode('CP1251','replace')
-            
-            index = self.listCtrl_Properties.InsertStringItem(0, p_name_str)
-            self.listCtrl_Properties.SetStringItem(index, 1, p_values_str)
-            #self.textCtrl_Editor.AppendText(p_values_str)
+           
+        if obj == self.queue[-1]:
+            self.listctrl.DeleteAllItems()
+            for p_name in param_names:
+                p_name_str = str(p_name)
+                try:
+                    p_values_str = str(properties[p_name])
+                except exceptions.UnicodeEncodeError:
+                    p_values_str = properties[p_name].encode('CP1251','replace')
+                index = self.listctrl.InsertStringItem(0, p_name_str)
+                self.listctrl.SetStringItem(index, 1, p_values_str)
+            self.queue = []
+            self.updating = False
         
-    def _add_subitems(self, tree_item, obj):
-        self.treeCtrl_ObjectsBrowser.DeleteChildren(tree_item)
+        else:
+            self._update()
+            #there is the newer object for properties view.
+            #Do not update listctrl
+            #run _update again
+        
+class tree_updater(object):
+    def __init__(self, treectrl):
+        self.treectrl = treectrl
+        self.updating = False
+        self.queue = []
+        
+    def tree_update(self, tree_item, obj):
+        self.queue.append((tree_item, obj))
+        if self.updating:
+            return 0 
+        else:
+            thread.start_new_thread(self._update,())
+            
+    def _update(self):
+        self.updating = True
+        tree_item, obj = self.queue[-1]
+        self.treectrl.DeleteChildren(tree_item)
         subitems = obj.Get_subitems()
-        for i_name, i_obj in subitems:
+           
+        if (tree_item, obj) == self.queue[-1]:
+          for i_name, i_obj in subitems:
             item_data = wx.TreeItemData()
             item_data.SetData(i_obj)
-            item_id = self.treeCtrl_ObjectsBrowser.AppendItem(tree_item,i_name,data = item_data)
-            if not i_obj.is_visible:
-                self.treeCtrl_ObjectsBrowser.SetItemTextColour(item_id,'gray')
-            del item_data
-
-
+            try:
+              item_id = self.treectrl.AppendItem(tree_item,i_name,data = item_data)
+              if not i_obj.is_visible:
+                  self.treectrl.SetItemTextColour(item_id,'gray')
+            except wx._core.PyAssertionError:
+                pass
+                #Ignore tree item creation error when parent is not exists
+            finally:
+                del item_data
+          self.treectrl.Expand(self.treectrl.GetRootItem())
+          self.queue = []
+          self.updating = False
+        
+        else:
+            self._update()
+            #there is the newer object for tree view.
+            #Do not update treeCtrl
+            #run _update again
