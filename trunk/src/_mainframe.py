@@ -142,7 +142,7 @@ class Frame1(wx.Frame):
         if actions:
             for id, action_name in actions:
                 menu.Append(id, action_name)
-                if not obj.is_visible:
+                if not obj.is_actionable:
                     menu.Enable(id, False)
         else:
             menu.Append(0, 'No actions')
@@ -239,16 +239,17 @@ class prop_viewer_updater(object):
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower(), reverse=True)
            
+        self.listctrl.DeleteAllItems()
+        for p_name in param_names:
+            p_name_str = str(p_name)
+            try:
+                p_values_str = str(properties[p_name])
+            except exceptions.UnicodeEncodeError:
+                p_values_str = properties[p_name].encode('CP1251','replace')
+            index = self.listctrl.InsertStringItem(0, p_name_str)
+            self.listctrl.SetStringItem(index, 1, p_values_str)
+                
         if obj == self.queue[-1]:
-            self.listctrl.DeleteAllItems()
-            for p_name in param_names:
-                p_name_str = str(p_name)
-                try:
-                    p_values_str = str(properties[p_name])
-                except exceptions.UnicodeEncodeError:
-                    p_values_str = properties[p_name].encode('CP1251','replace')
-                index = self.listctrl.InsertStringItem(0, p_name_str)
-                self.listctrl.SetStringItem(index, 1, p_values_str)
             self.queue = []
             self.updating = False
         
@@ -276,21 +277,21 @@ class tree_updater(object):
         tree_item, obj = self.queue[-1]
         self.treectrl.DeleteChildren(tree_item)
         subitems = obj.Get_subitems()
-           
+        for i_name, i_obj in subitems:
+          item_data = wx.TreeItemData()
+          item_data.SetData(i_obj)
+          try:
+            item_id = self.treectrl.AppendItem(tree_item,i_name,data = item_data)
+            if not i_obj.is_visible:
+                self.treectrl.SetItemTextColour(item_id,'gray')
+          except wx._core.PyAssertionError:
+              pass
+              #Ignore tree item creation error when parent is not exists
+          finally:
+              del item_data
+        self.treectrl.Expand(self.treectrl.GetRootItem())
+        
         if (tree_item, obj) == self.queue[-1]:
-          for i_name, i_obj in subitems:
-            item_data = wx.TreeItemData()
-            item_data.SetData(i_obj)
-            try:
-              item_id = self.treectrl.AppendItem(tree_item,i_name,data = item_data)
-              if not i_obj.is_visible:
-                  self.treectrl.SetItemTextColour(item_id,'gray')
-            except wx._core.PyAssertionError:
-                pass
-                #Ignore tree item creation error when parent is not exists
-            finally:
-                del item_data
-          self.treectrl.Expand(self.treectrl.GetRootItem())
           self.queue = []
           self.updating = False
         

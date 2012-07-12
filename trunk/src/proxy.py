@@ -58,6 +58,7 @@ class SWAPYObject(object):
         default_sort_key = lambda name: name[0].lower()
         self.subitems_sort_key = default_sort_key
         self.is_visible = self._check_visibility()
+        self.is_actionable = self._check_actionable()
         
     def GetProperties(self):
         '''
@@ -205,6 +206,8 @@ ctrl."+action+"()\n"
               texts = control.Texts()
           except exceptions.WindowsError:
             texts = ['Unknown control name2!'] #workaround for WindowsError: [Error 0] ...
+          except exceptions.RuntimeError:
+            texts = ['Unknown control name3!'] #workaround for RuntimeError: GetButtonInfo failed for button with command id 256
           while texts.count(''):
             texts.remove('')
           text = ', '.join(texts)
@@ -317,6 +320,22 @@ ctrl."+action+"()\n"
         except:
             pass
         return is_visible
+        
+    def _check_actionable(self):
+        '''
+        Check control/window Actionable.
+        Return True or False if fails
+        '''
+        try:
+            self.pwa_obj.VerifyActionable()
+        except:
+            is_actionable = False
+        else:
+            is_actionable = True
+        return is_actionable
+        
+        
+        
 
 class VirtualSWAPYObject(SWAPYObject):
     def __init__(self, parent, index):
@@ -324,6 +343,7 @@ class VirtualSWAPYObject(SWAPYObject):
         self.index = index
         self.pwa_obj = self
         self.is_visible = self.parent.is_visible
+        self.is_actionable = self.parent.is_visible
         
     def Select(self):
         self.parent.pwa_obj.Select(self.index)
@@ -367,8 +387,20 @@ class PC_system(SWAPYObject):
         '''
         #windows--------------------
         windows = []
+        try_count = 3
         app = pywinauto.application.Application()
-        handles = pywinauto.findwindows.find_windows(title_re='.*')
+        for i in range(try_count):
+          try:
+            handles = pywinauto.findwindows.find_windows(title_re='.*')
+          except exceptions.OverflowError: # workaround for OverflowError: array too large
+            time.sleep(1)
+          except exceptions.MemoryError:# workaround for MemoryError
+            time.sleep(1)
+          else:
+            break
+        else:
+          #TODO: add swapy exception: Could not get windows list
+          handles = []
         #we have to find taskbar in windows list
         warnings.filterwarnings("ignore", category=FutureWarning) #ignore future warning in taskbar module
         from pywinauto import taskbar
@@ -592,7 +624,11 @@ class Pwa_toolbar(SWAPYObject):
         additional_children = []
         buttons_count = self.pwa_obj.ButtonCount()
         for button_index in range(buttons_count):
+          try:
             button_text = self.pwa_obj.Button(button_index).info.text
+          except exceptions.RuntimeError:
+            button_text = ['Unknown button name1!'] #workaround for RuntimeError: GetButtonInfo failed for button with index 0
+          else:
             button_item = [(button_text, self._get_swapy_object(self.pwa_obj.Button(button_index)))]
             additional_children += button_item
         return additional_children
