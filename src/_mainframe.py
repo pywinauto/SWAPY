@@ -238,18 +238,17 @@ class prop_viewer_updater(object):
         properties = obj.GetProperties()
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower(), reverse=True)
-           
-        self.listctrl.DeleteAllItems()
-        for p_name in param_names:
-            p_name_str = str(p_name)
-            try:
-                p_values_str = str(properties[p_name])
-            except exceptions.UnicodeEncodeError:
-                p_values_str = properties[p_name].encode('CP1251','replace')
-            index = self.listctrl.InsertStringItem(0, p_name_str)
-            self.listctrl.SetStringItem(index, 1, p_values_str)
-                
+        
         if obj == self.queue[-1]:
+            self.listctrl.DeleteAllItems()
+            for p_name in param_names:
+                p_name_str = str(p_name)
+                try:
+                    p_values_str = str(properties[p_name])
+                except exceptions.UnicodeEncodeError:
+                    p_values_str = properties[p_name].encode('CP1251','replace')
+                index = self.listctrl.InsertStringItem(0, p_name_str)
+                self.listctrl.SetStringItem(index, 1, p_values_str)
             self.queue = []
             self.updating = False
         

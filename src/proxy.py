@@ -391,7 +391,7 @@ class PC_system(SWAPYObject):
         app = pywinauto.application.Application()
         for i in range(try_count):
           try:
-            handles = pywinauto.findwindows.find_windows(title_re='.*')
+            handles = pywinauto.findwindows.find_windows()
           except exceptions.OverflowError: # workaround for OverflowError: array too large
             time.sleep(1)
           except exceptions.MemoryError:# workaround for MemoryError
