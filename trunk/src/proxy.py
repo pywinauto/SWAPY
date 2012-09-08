@@ -57,8 +57,6 @@ class SWAPYObject(object):
         self.pwa_obj = pwa_obj
         default_sort_key = lambda name: name[0].lower()
         self.subitems_sort_key = default_sort_key
-        self.is_visible = self._check_visibility()
-        self.is_actionable = self._check_actionable()
         
     def GetProperties(self):
         '''
@@ -334,6 +332,20 @@ ctrl."+action+"()\n"
             is_actionable = True
         return is_actionable
         
+    def _check_existence(self):
+        '''
+        Check control/window Exists.
+        Return True or False if fails
+        '''
+
+        try:
+            handle_ = self.pwa_obj.handle
+            obj = pywinauto.application.WindowSpecification({'handle': handle_})
+        except:
+            is_exist = False
+        else:
+            is_exist = obj.Exists()
+        return is_exist
         
         
 
@@ -342,8 +354,9 @@ class VirtualSWAPYObject(SWAPYObject):
         self.parent = parent
         self.index = index
         self.pwa_obj = self
-        self.is_visible = self.parent.is_visible
-        self.is_actionable = self.parent.is_visible
+        self._check_visibility = self.parent._check_visibility
+        self._check_actionable = self.parent._check_actionable
+        self._check_existence = self.parent._check_existence
         
     def Select(self):
         self.parent.pwa_obj.Select(self.index)
@@ -447,6 +460,15 @@ class PC_system(SWAPYObject):
     def Highlight_control(self): 
         pass
         return 0
+        
+    def _check_visibility(self):
+        return True
+        
+    def _check_actionable(self):
+        return True
+        
+    def _check_existence(self):
+        return True
 
 class Pwa_window(SWAPYObject):
     def _get_additional_children(self):
@@ -466,7 +488,7 @@ class Pwa_window(SWAPYObject):
         '''
         action = ACTIONS[action_id]
         code = "\
-w_handle = pywinauto.findwindows.find_windows(title_re=u'"+ self.pwa_obj.WindowText().encode('unicode-escape', 'replace') +"', class_name='"+ self.pwa_obj.Class() +"')[0]\n\
+w_handle = pywinauto.findwindows.find_windows(title=u'"+ self.pwa_obj.WindowText().encode('unicode-escape', 'replace') +"', class_name='"+ self.pwa_obj.Class() +"')[0]\n\
 window = pwa_app.window_(handle=w_handle)\n\
 window."+action+"()\n"
         return code
@@ -474,7 +496,30 @@ window."+action+"()\n"
 class Pwa_menu(SWAPYObject):
 
     def _check_visibility(self):
-        return True
+        is_visible = False
+        try:
+            is_visible = self.pwa_obj.ctrl.IsVisible()
+        except:
+            pass
+        return is_visible
+        
+    def _check_actionable(self):
+        try:
+            self.pwa_obj.ctrl.VerifyActionable()
+        except:
+            is_actionable = False
+        else:
+            is_actionable = True
+        return is_actionable
+        
+    def _check_existence(self):
+        try:
+            self.pwa_obj.ctrl.handle
+        except:
+            is_exist = False
+        else:
+            is_exist = True
+        return is_exist
 
     def _get_additional_children(self):
         '''
@@ -511,8 +556,12 @@ class Pwa_menu(SWAPYObject):
         
 class Pwa_menu_item(Pwa_menu):
 
-    def _check_visibility(self):
-        return True
+    def _check_actionable(self):
+        if self.pwa_obj.State() == 3: #grayed
+            is_actionable = False
+        else:
+            is_actionable = True
+        return is_actionable
 
     def _get_additional_children(self):
         '''
