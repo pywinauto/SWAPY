@@ -128,6 +128,10 @@ class Frame1(wx.Frame):
     def OnTreeCtrl1TreeSelChanged(self, event):
         tree_item = event.GetItem()
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+        if not obj._check_existence():
+          self._init_windows_tree()
+          tree_item = self.treeCtrl_ObjectsBrowser.GetRootItem()
+          obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         self.prop_updater.props_update(obj)
         self.tree_updater.tree_update(tree_item, obj)
         obj.Highlight_control()
@@ -136,19 +140,27 @@ class Frame1(wx.Frame):
         menu = wx.Menu()
         #tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         tree_item = event.GetItem()
-        self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
-        actions = obj.Get_actions()
-        if actions:
-            for id, action_name in actions:
-                menu.Append(id, action_name)
-                if not obj.is_actionable:
-                    menu.Enable(id, False)
+        self.GLOB_last_rclick_tree_obj = obj
+        #self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
+        if obj._check_existence():       
+          actions = obj.Get_actions()
+          if actions:
+              for id, action_name in actions:
+                  menu.Append(id, action_name)
+                  if not obj._check_actionable():
+                      menu.Enable(id, False)
+          else:
+              menu.Append(0, 'No actions')
+              menu.Enable(0, False)
+          self.PopupMenu(menu)     
+          menu.Destroy()
         else:
-            menu.Append(0, 'No actions')
-            menu.Enable(0, False)
-        self.PopupMenu(menu)     
-        menu.Destroy() 
+          self._init_windows_tree()
+          tree_item = self.treeCtrl_ObjectsBrowser.GetRootItem()
+          obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+          self.prop_updater.props_update(obj)
+          self.tree_updater.tree_update(tree_item, obj)
     
     def OnlistCtrl_PropertiesListItemRightClick(self, event):
         self.GLOB_prop_item_index = event.GetIndex()
@@ -200,8 +212,9 @@ class Frame1(wx.Frame):
     
     
     def make_action(self, menu_id):
-        tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
-        obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+        #tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
+        #obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
+        obj = self.GLOB_last_rclick_tree_obj
         self.textCtrl_Editor.AppendText(obj.Get_code(menu_id))
         obj.Exec_action(menu_id)
         
@@ -214,7 +227,7 @@ class Frame1(wx.Frame):
         #self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
         del item_data
         #the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
-        self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
+        #self.treeCtrl_ObjectsBrowser.Expand(self.treeCtrl_ObjectsBrowser.GetRootItem())
 
 class prop_viewer_updater(object):
     def __init__(self, listctrl):
@@ -281,7 +294,7 @@ class tree_updater(object):
           item_data.SetData(i_obj)
           try:
             item_id = self.treectrl.AppendItem(tree_item,i_name,data = item_data)
-            if not i_obj.is_visible:
+            if (not i_obj._check_visibility()) or (not i_obj._check_actionable()):
                 self.treectrl.SetItemTextColour(item_id,'gray')
           except wx._core.PyAssertionError:
               pass
