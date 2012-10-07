@@ -699,6 +699,25 @@ class Pwa_toolbar_button(SWAPYObject):
             pass
         return is_visible
         
+    def _check_actionable(self):
+        try:
+            self.pwa_obj.toolbar_ctrl.VerifyActionable()
+        except:
+            is_actionable = False
+        else:
+            is_actionable = True
+        return is_actionable
+        
+    def _check_existence(self):
+        try:
+            handle_ = self.pwa_obj.toolbar_ctrl.handle
+            obj = pywinauto.application.WindowSpecification({'handle': handle_})
+        except:
+            is_exist = False
+        else:
+            is_exist = obj.Exists()
+        return is_exist
+        
     def _get_children(self):
         return []
         
