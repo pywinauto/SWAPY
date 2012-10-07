@@ -26,6 +26,8 @@ import exceptions
 import const
 import thread
 
+properties = {}
+
 def create(parent):
     return Frame1(parent)
 
@@ -200,7 +202,9 @@ class Frame1(wx.Frame):
             property = self.listCtrl_Properties.GetItem(item,0).GetText()
             clipdata.SetText(property)
         elif menu_id == 203:
-            value = self.listCtrl_Properties.GetItem(item,1).GetText()
+            #value = self.listCtrl_Properties.GetItem(item,1).GetText()
+            key = self.listCtrl_Properties.GetItem(item,0).GetText()
+            value = str(properties[key])
             clipdata.SetText(value)
         else:
             #Unknow id
@@ -248,6 +252,7 @@ class prop_viewer_updater(object):
         self.listctrl.DeleteAllItems()
         index = self.listctrl.InsertStringItem(0, 'Updating...')
         self.listctrl.SetStringItem(index, 1, '')
+        global properties
         properties = obj.GetProperties()
         param_names = properties.keys()
         param_names.sort(key=lambda name: name.lower(), reverse=True)
