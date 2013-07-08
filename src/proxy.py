@@ -138,7 +138,8 @@ ctrl."+action+"()\n"
         return code
         
     def Highlight_control(self): 
-        thread.start_new_thread(self._highlight_control,(3,))
+        if self._check_visibility():
+          thread.start_new_thread(self._highlight_control,(3,))
         return 0
         
         
@@ -225,7 +226,13 @@ ctrl."+action+"()\n"
           return (name, self._get_swapy_object(control))
         
         pwa_app = pywinauto.application.Application()
-        parent_obj = self.pwa_obj.TopLevelParent()
+        try:
+          parent_obj = self.pwa_obj.TopLevelParent()
+        except pywinauto.controls.HwndWrapper.InvalidWindowHandle:
+          #For non visible windows
+          #...
+          #InvalidWindowHandle: Handle 0x262710 is not a vaild window handle
+          parent_obj = self.pwa_obj
         children = self.pwa_obj.Children()
         visible_controls = [pwa_app.window_(handle=ch) for ch in pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
         uniq_names = pywinauto.findbestmatch.build_unique_dict(visible_controls)
@@ -675,10 +682,12 @@ class Pwa_toolbar(SWAPYObject):
         for button_index in range(buttons_count):
           try:
             button_text = self.pwa_obj.Button(button_index).info.text
+            button_object = self._get_swapy_object(self.pwa_obj.Button(button_index))
           except exceptions.RuntimeError:
-            button_text = ['Unknown button name1!'] #workaround for RuntimeError: GetButtonInfo failed for button with index 0
+            #button_text = ['Unknown button name1!'] #workaround for RuntimeError: GetButtonInfo failed for button with index 0
+            pass #ignore the button
           else:
-            button_item = [(button_text, self._get_swapy_object(self.pwa_obj.Button(button_index)))]
+            button_item = [(button_text, button_object)]
             additional_children += button_item
         return additional_children
         
@@ -779,6 +788,12 @@ class Pwa_tree_item(SWAPYObject):
         return props
 
     def _check_visibility(self):
+        return True
+        
+    def _check_existence(self):
+        return True
+        
+    def _check_actionable(self):
         return True
         
     def _get_children(self):
