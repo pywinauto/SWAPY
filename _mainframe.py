@@ -24,6 +24,7 @@ import wx
 import proxy
 import exceptions
 import const
+import platform
 import thread
 
 properties = {}
@@ -46,7 +47,9 @@ class Frame1(wx.Frame):
         #-----Main frame-----
         wx.Frame.__init__(self, id=wxID_FRAME1, name='', parent=prnt, 
               style=wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX | wx.CLIP_CHILDREN | wx.RESIZE_BORDER,
-              title='SWAPY - Simple Windows Automation on Python. v %s' % const.VERSION)
+              title='SWAPY - Simple Windows Automation on Python v. %s. pywinauto v. %s. %s' % (const.VERSION,
+                                                                                                proxy.pywinauto.__version__,
+                                                                                                platform.architecture()[0]))
         self.SetIcon(wx.Icon(proxy.resource_path("swapy_dog_head.ico"),
               wx.BITMAP_TYPE_ICO))
               

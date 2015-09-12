@@ -19,6 +19,7 @@
 #    Boston, MA 02111-1307 USA
 
 import pywinauto
+import sys, os
 import time
 import wx
 import thread
@@ -34,15 +35,19 @@ proxy module for pywinauto
 
 pywinauto.timings.Timings.window_find_timeout = 1
 
-def resource_path(relative):
-    import os
-    return os.path.join(
-        os.environ.get(
-            "_MEIPASS2",
-            os.path.abspath(".")
-        ),
-        relative
-    )
+def resource_path(filename):
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller >= 1.6
+        ###os.chdir(sys._MEIPASS)
+        filename = os.path.join(sys._MEIPASS, filename)
+    elif '_MEIPASS2' in os.environ:
+        # PyInstaller < 1.6 (tested on 1.5 only)
+        ###os.chdir(os.environ['_MEIPASS2'])
+        filename = os.path.join(os.environ['_MEIPASS2'], filename)
+    else:
+        ###os.chdir(sys.path.dirname(sys.argv[0]))
+        filename = os.path.join(os.path.dirname(sys.argv[0]), filename)
+    return filename
 
 class SWAPYObject(object):
     '''
