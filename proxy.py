@@ -511,27 +511,23 @@ class Pwa_menu(SWAPYObject):
         is_visible = False
         try:
             is_visible = self.pwa_obj.ctrl.IsVisible()
-        except:
+        except AttributeError:
             pass
         return is_visible
         
     def _check_actionable(self):
-        try:
-            self.pwa_obj.ctrl.VerifyActionable()
-        except:
-            is_actionable = False
+        if self.pwa_obj.accessible:
+            return True
         else:
-            is_actionable = True
-        return is_actionable
+            return False
         
     def _check_existence(self):
         try:
             self.pwa_obj.ctrl.handle
         except:
-            is_exist = False
+            return False
         else:
-            is_exist = True
-        return is_exist
+            return True
 
     def _get_additional_children(self):
         '''
@@ -542,6 +538,10 @@ class Pwa_menu(SWAPYObject):
         #print(self.pwa_obj.owner_item)
         
         self.subitems_sort_key = lambda obj: obj[1].pwa_obj.Index() #sorts items by indexes
+
+        if not self.pwa_obj.accessible:
+            return []
+
         additional_children = []
         menu_items = self.pwa_obj.Items()
         for menu_item in menu_items:
