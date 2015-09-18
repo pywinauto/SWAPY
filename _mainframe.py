@@ -20,14 +20,17 @@
 
 #Boa:Frame:MainFrame
 
-import wx
-import proxy
-import exceptions
 import const
+import exceptions
+import locale
 import platform
 import thread
+import wx
 
-properties = {}
+import proxy
+
+#Avoid limit of wx.ListCtrl in 512 symbols
+PROPERTIES = {}
 
 def create(parent):
     return Frame1(parent)
@@ -174,6 +177,7 @@ class Frame1(wx.Frame):
         menu.AppendSeparator()
         menu.Append(202, 'Copy property')
         menu.Append(203, 'Copy value')
+        menu.Append(204, 'Copy unicode value')
         self.PopupMenu(menu)     
         menu.Destroy() 
 
@@ -194,6 +198,7 @@ class Frame1(wx.Frame):
         item = self.GLOB_prop_item_index
         clipdata = wx.TextDataObject()
         if menu_id == 201:
+            # Copy all
             all_texts = ''
             items_count = self.listCtrl_Properties.GetItemCount()
             for i in range(items_count):
@@ -202,13 +207,26 @@ class Frame1(wx.Frame):
                 all_texts += '%s : %s' % (prop_name, val_name) + '\n'
             clipdata.SetText(all_texts)
         elif menu_id == 202:
+            # Copy property
             property = self.listCtrl_Properties.GetItem(item,0).GetText()
             clipdata.SetText(property)
         elif menu_id == 203:
+            # Copy value
             #value = self.listCtrl_Properties.GetItem(item,1).GetText()
             key = self.listCtrl_Properties.GetItem(item,0).GetText()
-            value = str(properties[key])
-            clipdata.SetText(value)
+            try:
+                value_str = str(PROPERTIES[key])
+            except exceptions.UnicodeEncodeError:
+                value_str = PROPERTIES[key].encode(locale.getpreferredencoding(), 'replace')
+            clipdata.SetText(value_str)
+        elif menu_id == 204:
+            # Copy unicode value
+            key = self.listCtrl_Properties.GetItem(item,0).GetText()
+            try:
+                value_unicode_escape = str(PROPERTIES[key])
+            except exceptions.UnicodeEncodeError:
+                value_unicode_escape = PROPERTIES[key].encode('unicode-escape', 'replace')
+            clipdata.SetText(value_unicode_escape)
         else:
             #Unknow id
             pass
@@ -255,9 +273,9 @@ class prop_viewer_updater(object):
         self.listctrl.DeleteAllItems()
         index = self.listctrl.InsertStringItem(0, 'Updating...')
         self.listctrl.SetStringItem(index, 1, '')
-        global properties
-        properties = obj.GetProperties()
-        param_names = properties.keys()
+        global PROPERTIES
+        PROPERTIES = obj.GetProperties()
+        param_names = PROPERTIES.keys()
         param_names.sort(key=lambda name: name.lower(), reverse=True)
         
         if obj == self.queue[-1]:
@@ -265,9 +283,9 @@ class prop_viewer_updater(object):
             for p_name in param_names:
                 p_name_str = str(p_name)
                 try:
-                    p_values_str = str(properties[p_name])
+                    p_values_str = str(PROPERTIES[p_name])
                 except exceptions.UnicodeEncodeError:
-                    p_values_str = properties[p_name].encode('CP1251','replace')
+                    p_values_str = PROPERTIES[p_name].encode(locale.getpreferredencoding(), 'replace')
                 index = self.listctrl.InsertStringItem(0, p_name_str)
                 self.listctrl.SetStringItem(index, 1, p_values_str)
             self.queue = []
@@ -301,7 +319,12 @@ class tree_updater(object):
           item_data = wx.TreeItemData()
           item_data.SetData(i_obj)
           try:
-            item_id = self.treectrl.AppendItem(tree_item,i_name,data = item_data)
+              i_name_str = str(i_name)
+          except exceptions.UnicodeEncodeError:
+              i_name_str = i_name.encode(locale.getpreferredencoding(), 'replace')
+
+          try:
+            item_id = self.treectrl.AppendItem(tree_item, i_name_str, data=item_data)
             if (not i_obj._check_visibility()) or (not i_obj._check_actionable()):
                 self.treectrl.SetItemTextColour(item_id,'gray')
           except wx._core.PyAssertionError:
