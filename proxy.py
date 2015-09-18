@@ -104,7 +104,7 @@ class SWAPYObject(object):
         #encode names
         subitems_encoded = []
         for (name, obj) in subitems:
-            name = name.encode('cp1251', 'replace')
+            #name = name.encode('cp1251', 'replace')
             subitems_encoded.append((name, obj))
         return subitems_encoded
         
@@ -441,7 +441,7 @@ class PC_system(SWAPYObject):
             title = ', '.join(texts)
             if not title:
                 title = 'Window#%s' % w_handle
-            title = title.encode('cp1251', 'replace')
+            #title = title.encode('cp1251', 'replace')
             windows.append((title, self._get_swapy_object(wind)))
         windows.sort(key=lambda name: name[0].lower())
         #-----------------------
@@ -636,7 +636,7 @@ class virtual_combobox_item(VirtualSWAPYObject):
             if name == text:
                 index = i
                 break
-        return {'Index' : index, 'Text' : text.encode('unicode-escape', 'replace')}
+        return {'Index' : index, 'Text' : text} # .encode('unicode-escape', 'replace')}
         
 class Pwa_listview(SWAPYObject):
     def _get_additional_children(self):
