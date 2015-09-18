@@ -35,6 +35,9 @@ install:
   # Install the build dependencies of the project.
    - "%CMD_IN_ENV% pip install -r dev-requirements.txt"
 
+   # Install pywinauto from the trunk
+   - "%CMD_IN_ENV% pip install -e git+https://github.com/pywinauto/pywinauto.git@master#egg=pywinauto-trunk"
+
 build: off  # disable automatic builds
 
 build_script:

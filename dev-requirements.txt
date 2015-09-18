@@ -1,2 +1,2 @@
-pywinauto
+pypiwin32
 PyInstaller
