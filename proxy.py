@@ -673,7 +673,8 @@ class Pwa_tab(SWAPYObject):
 class virtual_tab_item(VirtualSWAPYObject):
 
     def _get_properies(self):
-        item_properties = {'Index' : self.index}
+        item_properties = {'Index' : self.index,
+                           'Texts': self.parent.pwa_obj.GetTabText(self.index)}
         return item_properties
 
 class Pwa_toolbar(SWAPYObject):
