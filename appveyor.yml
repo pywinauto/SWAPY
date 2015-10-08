@@ -41,6 +41,7 @@ install:
 build: off  # disable automatic builds
 
 build_script:
+  - "%CMD_IN_ENV% pip freeze"
   - "%CMD_IN_ENV% powershell ./ci/build.ps1"
 
 #test_script:
