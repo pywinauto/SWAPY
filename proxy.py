@@ -920,11 +920,22 @@ class Pwa_tab(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
-            additional_children += [(text, virtual_tab_item(self, text))]
+            additional_children += [(text, virtual_tab_item(self, index))]
         return additional_children
 
 
 class virtual_tab_item(VirtualSWAPYObject):
+
+    @property
+    def _code_action(self):
+        index = self.parent.pwa_obj.GetTabText(self.index)
+        if isinstance(index, unicode):
+            index = "'%s'" % index.encode('unicode-escape', 'replace')
+        code = self.code_action_pattern.format(index=index,
+                                               action="{action}",
+                                               var="{var}",
+                                               parent_var="{parent_var}")
+        return code
 
     def _get_properies(self):
         item_properties = {'Index' : self.index,
