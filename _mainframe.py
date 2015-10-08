@@ -128,8 +128,7 @@ class Frame1(wx.Frame):
     def __init__(self, parent):
         self._init_ctrls(parent)
         self._init_windows_tree()   
-        self.textCtrl_Editor.AppendText('import pywinauto\n\n')
-        self.textCtrl_Editor.AppendText('pwa_app = pywinauto.application.Application()\n')
+        self.textCtrl_Editor.AppendText('from pywinauto.application import Application\n\n')
         self.prop_updater = prop_viewer_updater(self.listCtrl_Properties)
         self.tree_updater = tree_updater(self.treeCtrl_ObjectsBrowser)
         
