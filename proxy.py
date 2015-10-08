@@ -192,27 +192,10 @@ class PwaWrapper(object):
         Can be owerridden for non pywinauto obects
         '''
         subitems = []
+
         subitems += self._get_children()
-        '''
-        for control in children:
-            try:
-                texts = control.Texts()
-            except exceptions.RuntimeError:
-                texts = ['Unknown control name2!'] #workaround
-            while texts.count(''):
-                texts.remove('')
-            c_name = ', '.join(texts)
-            if not c_name:
-                #nontext_controlname = pywinauto.findbestmatch.GetNonTextControlName(control, children)[0]
-                top_level_parent = control.TopLevelParent().Children()
-                nontext_controlname = pywinauto.findbestmatch.GetNonTextControlName(control, top_level_parent)[0]
-                if nontext_controlname:
-                  c_name = nontext_controlname
-                else:
-                  c_name = 'Unknown control name1!'
-            subitems.append((c_name, self._get_swapy_object(control)))
-        '''
         subitems += self._get_additional_children()
+
         subitems.sort(key=self.subitems_sort_key)
         #encode names
         subitems_encoded = []
@@ -262,32 +245,18 @@ class PwaWrapper(object):
         return properties
         
     def _get_additional_properties(self):
-        '''
+
+        """
         Get additonal useful properties, like a handle, process ID, etc.
         Can be overridden by derived class
-        '''
+        """
+
         additional_properties = {}
-        pwa_app = pywinauto.application.Application()
+
         #-----Access names
-        try:
-            #parent_obj = self.pwa_obj.Parent()
-            parent_obj = self.pwa_obj.TopLevelParent()
-        except:
-            pass
-        else:
-            try:
-                #all_controls = parent_obj.Children()
-                all_controls = [pwa_app.window_(handle=ch) for ch in pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
-            except:
-                pass
-            else:
-                access_names = []
-                uniq_names = pywinauto.findbestmatch.build_unique_dict(all_controls)
-                for uniq_name, obj in uniq_names.items():
-                    if uniq_name != '' and obj.WrapperObject() == self.pwa_obj:
-                      access_names.append(uniq_name)
-                access_names.sort(key=len)
-                additional_properties.update({'Access names' : access_names})
+        access_names = [name for name, obj in self.__get_uniq_names(target_control=self.pwa_obj)]
+        if access_names:
+            additional_properties.update({'Access names' : access_names})
         #-----
         
         #-----pwa_type
@@ -303,49 +272,46 @@ class PwaWrapper(object):
         return additional_properties
         
     def _get_children(self):
-        '''
+
+        """
         Return original pywinauto's object children & names
         [(control_text, swapy_obj),...]
-        '''
-        def _get_name_control(control):
-          try:
-              texts = control.Texts()
-          except exceptions.WindowsError:
-            texts = ['Unknown control name2!'] #workaround for WindowsError: [Error 0] ...
-          except exceptions.RuntimeError:
-            texts = ['Unknown control name3!'] #workaround for RuntimeError: GetButtonInfo failed for button with command id 256
-          while texts.count(''):
-            texts.remove('')
-          text = ', '.join(texts)
-          if not text:
-            u_names = []
-            for uniq_name, obj in uniq_names.items():
-              if uniq_name != '' and obj.WrapperObject() == control:
-              #if uniq_name != '' and obj == control:
-                u_names.append(uniq_name)
-            if u_names:
-              u_names.sort(key=len)
-              name = u_names[-1]
+        """
+
+        u_names = None
+        children = []
+        children_controls = self.pwa_obj.Children()
+        for child_control in children_controls:
+            try:
+                texts = child_control.Texts()
+            except exceptions.WindowsError:
+                #texts = ['Unknown control name2!'] #workaround for WindowsError: [Error 0] ...
+                texts = None
+            except exceptions.RuntimeError:
+                #texts = ['Unknown control name3!'] #workaround for RuntimeError: GetButtonInfo failed for button with command id 256
+                texts = None
+
+            if texts:
+                texts = filter(bool, texts)  # filter out '' and None items
+
+            if texts:  # check again after the filtering
+                title = ', '.join(texts)
             else:
-              name = 'Unknown control name1!'
-          else:
-            name = text
-          return (name, self._get_swapy_object(control))
-        
-        pwa_app = pywinauto.application.Application()
-        try:
-          parent_obj = self.pwa_obj.TopLevelParent()
-        except pywinauto.controls.HwndWrapper.InvalidWindowHandle:
-          #For non visible windows
-          #...
-          #InvalidWindowHandle: Handle 0x262710 is not a vaild window handle
-          parent_obj = self.pwa_obj
-        children = self.pwa_obj.Children()
-        visible_controls = [pwa_app.window_(handle=ch) for ch in pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
-        uniq_names = pywinauto.findbestmatch.build_unique_dict(visible_controls)
-        #uniq_names = pywinauto.findbestmatch.build_unique_dict(children)
-        names_children = map(_get_name_control, children)
-        return names_children
+                # .Texts() does not have a useful title, trying get it from the uniqnames
+                if u_names is None:
+                    # init unames list
+                    u_names = self.__get_uniq_names()
+
+                child_uniq_name = [uniq_name for uniq_name, obj in u_names if obj.WrapperObject() == child_control]
+
+                if child_uniq_name:
+                    title = child_uniq_name[-1]
+                else:
+                    # uniqnames has no useful title
+                    title = 'Unknown control name1!'
+            children.append((title, self._get_swapy_object(child_control)))
+
+        return children
 
     def _get_additional_children(self):
         '''
@@ -456,6 +422,35 @@ class PwaWrapper(object):
             is_exist = obj.Exists()
         return is_exist
 
+    def __get_uniq_names(self, target_control=None):
+
+        """
+        Return uniq_names of the control
+        [(uniq_name, obj), ]
+        If target_control specified, apply additional filtering for obj == target_control
+        """
+
+        # TODO: cache this method
+
+        pwa_app = pywinauto.application.Application()  # TODO: do not call .Application() everywhere.
+
+        try:
+            parent_obj = self.pwa_obj.TopLevelParent()
+        except pywinauto.controls.HwndWrapper.InvalidWindowHandle:
+            #For non visible windows
+            #...
+            #InvalidWindowHandle: Handle 0x262710 is not a vaild window handle
+            parent_obj = self.pwa_obj
+        except AttributeError:
+            return []
+
+        visible_controls = [pwa_app.window_(handle=ch) for ch in
+                            pywinauto.findwindows.find_windows(parent=parent_obj.handle, top_level_only=False)]
+        uniq_names_obj = [(uniq_name, obj) for uniq_name, obj
+                      in pywinauto.findbestmatch.build_unique_dict(visible_controls).items()
+                      if uniq_name != '' and (not target_control or obj.WrapperObject() == target_control)]
+        return sorted(uniq_names_obj, key=lambda name_obj: len(name_obj[0]))  # sort by name
+
 
 class SWAPYObject(PwaWrapper, CodeGenerator):
 
@@ -498,7 +493,7 @@ class SWAPYObject(PwaWrapper, CodeGenerator):
         Default _code_self.
         """
         #print self._get_additional_properties()
-        access_name = self._get_additional_properties()['Access names'][0]
+        access_name = self.GetProperties()['Access names'][0]
         if check_valid_identifier(access_name):
             # A valid identifier
             code = self.code_self_pattern_attr.format(access_name=access_name,
@@ -629,15 +624,14 @@ class PC_system(SWAPYObject):
         for w_handle in handles:
             wind = app.window_(handle=w_handle)
             if w_handle == taskbar_handle:
-                texts = ['TaskBar']
+                title = 'TaskBar'
             else:
                 texts = wind.Texts()
-            while texts.count(''):
-                texts.remove('')
-            title = ', '.join(texts)
-            if not title:
-                title = 'Window#%s' % w_handle
-            #title = title.encode('cp1251', 'replace')
+                texts = filter(bool, texts)  # filter out '' and None items
+                if not texts:
+                    title = 'Window#%s' % w_handle
+                else:
+                    title = ', '.join(texts)
             windows.append((title, self._get_swapy_object(wind)))
         windows.sort(key=lambda name: name[0].lower())
         #-----------------------
@@ -926,22 +920,11 @@ class Pwa_tab(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
-            additional_children += [(text, virtual_tab_item(self, index))]
+            additional_children += [(text, virtual_tab_item(self, text))]
         return additional_children
 
 
 class virtual_tab_item(VirtualSWAPYObject):
-
-    @property
-    def _code_action(self):
-        index = self.parent.pwa_obj.GetTabText(self.index)
-        if isinstance(index, unicode):
-            index = "'%s'" % index.encode('unicode-escape', 'replace')
-        code = self.code_action_pattern.format(index=index,
-                                               action="{action}",
-                                               var="{var}",
-                                               parent_var="{parent_var}")
-        return code
 
     def _get_properies(self):
         item_properties = {'Index' : self.index,
