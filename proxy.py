@@ -878,26 +878,51 @@ class Pwa_listview(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.ItemCount()):
             item = self.pwa_obj.GetItem(index)
-            additional_children += [(item['text'], virtual_listview_item(self, index))]
+        #for item in self.pwa_obj.Items(): #Wait for the fix https://github.com/pywinauto/pywinauto/issues/97
+            additional_children += [(item['text'], listview_item(item, self))]
         return additional_children
 
 
-class virtual_listview_item(VirtualSWAPYObject):
+class listview_item(SWAPYObject):
+
+    code_self_pattern = "{var} = {parent_var}.GetItem('{index}')\n"
+
+    @property
+    def _code_self(self):
+        code = self.code_self_pattern.format(index=self.pwa_obj.ItemData()['text'],
+                                             parent_var="{parent_var}",
+                                             var="{var}")
+        return code
 
     def _get_properies(self):
-        item_properties = {'Index' : self.index}
-        for index, item_props in enumerate(self.parent.pwa_obj.Items()):
-            if index == self.index:
-                item_properties.update(item_props)
-                break
+        item_properties = {'index': self.pwa_obj.item_index}
+        item_properties.update(self.pwa_obj.ItemData())
         return item_properties
+
+    def _check_visibility(self):
+        return True
+
+    def _check_actionable(self):
+        return True
+
+    def _check_existence(self):
+        return True
+
+    def Get_subitems(self):
+        return []
+
+    def Highlight_control(self):
+        pass
+        return 0
 
 
 class Pwa_tab(SWAPYObject):
     def _get_additional_children(self):
-        '''
+
+        """
         Add TabControl items as children
-        '''
+        """
+
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
@@ -906,6 +931,17 @@ class Pwa_tab(SWAPYObject):
 
 
 class virtual_tab_item(VirtualSWAPYObject):
+
+    @property
+    def _code_action(self):
+        index = self.parent.pwa_obj.GetTabText(self.index)
+        if isinstance(index, unicode):
+            index = "'%s'" % index.encode('unicode-escape', 'replace')
+        code = self.code_action_pattern.format(index=index,
+                                               action="{action}",
+                                               var="{var}",
+                                               parent_var="{parent_var}")
+        return code
 
     def _get_properies(self):
         item_properties = {'Index' : self.index,
