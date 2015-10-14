@@ -1,2 +1,3 @@
 pywinauto
-PyInstaller
+Pillow==2.7.0
+PyInstaller==2.1
