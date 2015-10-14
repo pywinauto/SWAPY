@@ -18,15 +18,18 @@
 #    Suite 330,
 #    Boston, MA 02111-1307 USA
 
-import pywinauto
-import sys, os
+import exceptions
+import platform
+import os
+import sys
 import string
 import time
 import thread
-import exceptions
-import platform
-import re
 import warnings
+
+import pywinauto
+
+from code_manager import CodeGenerator, check_valid_identifier
 from const import *
 
 '''
@@ -50,114 +53,6 @@ def resource_path(filename):
         ###os.chdir(sys.path.dirname(sys.argv[0]))
         filename = os.path.join(os.path.dirname(sys.argv[0]), filename)
     return filename
-
-
-def check_valid_identifier(identifier):
-
-    """
-    Check the identifier is a valid Python identifier.
-    Since the identifier will be used as an attribute, don't check for reserved names.
-    """
-
-    return bool(re.match("[_A-Za-z][_a-zA-Z0-9]*$", identifier))
-
-
-class CodeGenerator(object):
-
-    """
-    Code generation behavior. Expect be used as one of base classes of the SWAPYObject's wrapper.
-    """
-
-    code_var_name = None  # Default value, will be rewrote with composed variable name as an instance attribute.
-    code_var_counters = {}  # Default value, will be rewrote as instance's class attribute by get_code_id(cls)
-
-    @classmethod
-    def get_code_id(cls, var_prefix='default'):
-
-        """
-        Increment code id. For example, the script already has `button1=...` line,
-        so for a new button make `button2=... code`.
-        The idea is the CodeGenerator's default value code_var_counters['var_prefix'] will be overwrote by this funk
-        as a control's wrapper class(e.g Pwa_window) attribute.
-        Its non default value will be shared for all the control's wrapper class(e.g Pwa_window) instances.
-        """
-
-        if var_prefix not in cls.code_var_counters:
-            cls.code_var_counters[var_prefix] = 1
-        else:
-            cls.code_var_counters[var_prefix] += 1
-        return cls.code_var_counters[var_prefix]
-
-    def get_code_self(self):
-
-        """
-        Composes code to access the control. E. g.: `button1 = calcframe1['Button12']`
-        Pattern may use the next argument:
-        * {var}
-        * {parent_var}
-        * {main_parent_var}
-        E. g.: `"{var} = {parent_var}['access_name']\n"`.
-        """
-
-        pattern = self._code_self
-        if pattern:
-            self.code_var_name = self.code_var_pattern.format(id=self.get_code_id(self.code_var_pattern))
-            format_kwargs = {'var': self.code_var_name}
-            try:
-                main_parent = self.code_parents[0]
-            except IndexError:
-                main_parent = None
-
-            if self.parent or main_parent:
-                if self.parent:
-                    format_kwargs['parent_var'] = self.parent.code_var_name
-                if main_parent:
-                    format_kwargs['main_parent_var'] = main_parent.code_var_name
-            return pattern.format(**format_kwargs)
-        return ""
-
-    def get_code_action(self, action):
-
-        """
-        Composes code to run an action. E. g.: `button1.Click()`
-        Pattern may use the next argument:
-        * {var}
-        * {action}
-        * {parent_var}
-        * {main_parent_var}
-        E. g.: `"{var}.{action}()\n"`.
-        """
-
-        format_kwargs = {'var': self.code_var_name,
-                         'action': action}
-        if self.parent:
-            format_kwargs['parent_var'] = self.parent.code_var_name
-
-        if self.code_parents[0]:
-            format_kwargs['main_parent_var'] = self.code_parents[0].code_var_name
-
-        return self._code_action.format(**format_kwargs)
-
-    def Get_code(self, action_id):
-
-        """
-        Return all the code nneded to make the action on the control.
-        Walk parents if needed.
-        """
-
-        code = ""
-        if self.code_var_name is None:
-            # parent/s code is not inited
-            code_parents = self.code_parents[:]
-            code_parents.reverse()  # start from the top level parent
-
-            code += ''.join([p.get_code_self() for p in code_parents if not p.code_var_name])  # parents code
-            code += self.get_code_self()  # self access code
-
-        action = ACTIONS[action_id]
-        code += self.get_code_action(action)  # self action code
-
-        return code
 
 
 class PwaWrapper(object):
@@ -458,9 +353,9 @@ class SWAPYObject(PwaWrapper, CodeGenerator):
     Mix the pywinauto wrapper and the codegenerator
     """
 
-    code_self_pattern_attr = "{var} = {parent_var}.{access_name}\n"
-    code_self_pattern_item = "{var} = {parent_var}['{access_name}']\n"
-    code_action_pattern = "{var}.{action}()\n"
+    code_self_pattern_attr = "{var} = {parent_var}.{access_name}"
+    code_self_pattern_item = "{var} = {parent_var}['{access_name}']"
+    code_action_pattern = "{var}.{action}()"
     main_parent_type = None
 
     def __init__(self, *args, **kwargs):
@@ -517,6 +412,14 @@ class SWAPYObject(PwaWrapper, CodeGenerator):
         return code
 
     @property
+    def _code_close(self):
+
+        """
+        Default _code_close.
+        """
+        return ""
+
+    @property
     def code_var_pattern(self):
 
         """
@@ -543,7 +446,7 @@ class VirtualSWAPYObject(SWAPYObject):
         self._check_existence = self.parent._check_existence
         self.code_parents = self.get_code_parents()
 
-    code_action_pattern = "{parent_var}.{action}({index})\n"
+    code_action_pattern = "{parent_var}.{action}({index})"
 
     @property
     def _code_self(self):
@@ -591,7 +494,7 @@ class PC_system(SWAPYObject):
     def _code_self(self):
         # code = self.code_self_pattern.format(var="{var}")
         # return code
-        return ""
+        return "from pywinauto.application import Application"
     #
     # @property
     # def code_var_pattern(self):
@@ -668,9 +571,9 @@ class PC_system(SWAPYObject):
 
 
 class Pwa_window(SWAPYObject):
-    code_self_pattern_attr = "{var} = app_{var}.{access_name}\n"
-    code_self_pattern_item = "{var} = app_{var}['{access_name}']\n"
-    #code_self_pattern = "{var} = {parent_var}.Window_(title=u'{title}', class_name='{cls_name}')\n"
+    code_self_pattern_attr = "{var} = app_{var}.{access_name}"
+    code_self_pattern_item = "{var} = app_{var}['{access_name}']"
+    code_self_close = "app_{var}.Kill_()"
 
     @property
     def _code_self(self):
@@ -678,12 +581,24 @@ class Pwa_window(SWAPYObject):
         if not self._get_additional_properties()['Access names']:
             raise NotImplementedError
         else:
-            code += "app_{var} = Application().Connect_(title=u'{title}'," \
+            code += "\napp_{var} = Application().Connect_(title=u'{title}'," \
                     "class_name='{cls_name}')\n".format(title=self.pwa_obj.WindowText().encode('unicode-escape',
                                                                                                'replace'),
                                                         cls_name=self.pwa_obj.Class(),
                                                         var="{var}")
             code += super(Pwa_window, self)._code_self
+
+        return code
+
+    @property
+    def _code_close(self):
+
+        """
+        Rewrite default behavior.
+        """
+
+        code = ""
+        #code = self.code_self_close.format(var="{var}")
 
         return code
 
@@ -790,7 +705,7 @@ class Pwa_menu(SWAPYObject):
 class Pwa_menu_item(Pwa_menu):
 
     main_parent_type = Pwa_window
-    code_self_pattern = "{var} = {main_parent_var}.MenuItem(u'{menu_path}')\n"
+    code_self_pattern = "{var} = {main_parent_var}.MenuItem(u'{menu_path}')"
 
     @property
     def _code_self(self):
@@ -879,7 +794,7 @@ class Pwa_listview(SWAPYObject):
 
 class listview_item(SWAPYObject):
 
-    code_self_pattern = "{var} = {parent_var}.GetItem('{index}')\n"
+    code_self_pattern = "{var} = {parent_var}.GetItem('{index}')"
 
     @property
     def _code_self(self):
@@ -920,7 +835,7 @@ class Pwa_tab(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
-            additional_children += [(text, virtual_tab_item(self, index))]
+            additional_children += [(text, virtual_tab_item(self, text))]
         return additional_children
 
 
@@ -974,7 +889,7 @@ class Pwa_toolbar(SWAPYObject):
 
 class Pwa_toolbar_button(SWAPYObject):
 
-    code_self_pattern = "{var} = {parent_var}.Button({index})\n"
+    code_self_pattern = "{var} = {parent_var}.Button({index})"
 
     @property
     def _code_self(self):
@@ -1062,7 +977,7 @@ class Pwa_tree(SWAPYObject):
 class Pwa_tree_item(SWAPYObject):
 
     main_parent_type = Pwa_tree
-    code_self_pattern = "{var} = {main_parent_var}.GetItem({path})\n"
+    code_self_pattern = "{var} = {main_parent_var}.GetItem({path})"
 
     @property
     def _code_self(self):

@@ -128,7 +128,7 @@ class Frame1(wx.Frame):
     def __init__(self, parent):
         self._init_ctrls(parent)
         self._init_windows_tree()   
-        self.textCtrl_Editor.AppendText('from pywinauto.application import Application\n\n')
+        #self.textCtrl_Editor.AppendText('from pywinauto.application import Application\n\n')
         self.prop_updater = prop_viewer_updater(self.listCtrl_Properties)
         self.tree_updater = tree_updater(self.treeCtrl_ObjectsBrowser)
         
@@ -233,13 +233,14 @@ class Frame1(wx.Frame):
         wx.TheClipboard.Open()
         wx.TheClipboard.SetData(clipdata)
         wx.TheClipboard.Close()
-    
-    
+
     def make_action(self, menu_id):
         #tree_item = self.treeCtrl_ObjectsBrowser.GetSelection()
         #obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         obj = self.GLOB_last_rclick_tree_obj
-        self.textCtrl_Editor.AppendText(obj.Get_code(menu_id))
+        #self.textCtrl_Editor.AppendText(obj.Get_code(menu_id))
+        action = const.ACTIONS[menu_id]
+        self.textCtrl_Editor.SetValue(obj.Get_code(action))
         obj.Exec_action(menu_id)
         
     def _init_windows_tree(self):
