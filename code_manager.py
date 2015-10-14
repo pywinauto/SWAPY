@@ -22,12 +22,12 @@
 import re
 
 
-
 def check_valid_identifier(identifier):
 
     """
     Check the identifier is a valid Python identifier.
-    Since the identifier will be used as an attribute, don't check for reserved names.
+    Since the identifier will be used as an attribute,
+    don't check for reserved names.
     """
 
     return bool(re.match("[_A-Za-z][_a-zA-Z0-9]*$", identifier))
@@ -43,9 +43,11 @@ class CodeSnippet(object):
     `indent` means `action_code` and `close_code` should be under the indent.
     """
 
-    def __init__(self, init_code='', action_code='', close_code='', indent=False):
+    def __init__(self, init_code='', action_code='', close_code='',
+                 indent=False):
         if not init_code and not action_code and not close_code:
-            raise SyntaxError("At least one of init_code, action_code, close_code should be passed.")
+            raise SyntaxError("At least one of init_code, "
+                              "action_code, close_code should be passed.")
         self.init_code = init_code
         self.action_code = action_code
         self.close_code = close_code
@@ -61,7 +63,8 @@ class CodeSnippet(object):
 class CodeManager(object):
 
     """
-    Manages code snippets. Handles intent if needed and keeps `close_code` always at the end.
+    Manages code snippets. Handles intent if needed and keeps `close_code` 
+    always at the end.
     Single instance.
     """
 
@@ -80,8 +83,9 @@ class CodeManager(object):
         self.indent_symbols = indent_symbols
 
     def _line(self, code, indent_count=0):
-        return "{indents}{code}".format(indents=self.indent_symbols * indent_count,
-                                        code=code)
+        return "{indents}{code}".format(
+            indents=self.indent_symbols * indent_count,
+            code=code)
 
     def add(self, snippet):
         self.snippets.append(snippet)
@@ -92,7 +96,7 @@ class CodeManager(object):
     def get_full_code(self):
 
         """
-        Compose complete code from the snippets
+        Compose complete code from the snippets.
         """
 
         lines = []
@@ -103,7 +107,8 @@ class CodeManager(object):
                 lines.append(self._line(snippet.init_code, indent_count))
 
             if snippet.indent:
-                # Add indent if needed. Notice the indent does not affect the init_code in this iteration.
+                # Add indent if needed. Notice the indent does not affect the
+                # init_code in this iteration.
                 indent_count += 1
 
             if snippet.action_code:
@@ -113,7 +118,8 @@ class CodeManager(object):
                 endings.append(self._line(snippet.close_code, indent_count))
 
         # Add the close_code codes.
-        # Reverse the list for a close_code from the first snippet was passed at the end of the code.
+        # Reverse the list for a close_code from the first snippet was passed
+        # at the end of the code.
         full_code = "\n".join(lines)
         full_code += 2*"\n"
         full_code += "\n".join(endings[::-1])
@@ -126,21 +132,26 @@ class CodeManager(object):
 class CodeGenerator(object):
 
     """
-    Code generation behavior. Expect be used as one of base classes of the SWAPYObject's wrapper.
+    Code generation behavior. Expect be used as one of base classes of the 
+    SWAPYObject's wrapper.
     """
     code_manager = CodeManager()
-    code_var_name = None  # Default value, will be rewrote with composed variable name as an instance attribute.
-    code_var_counters = {}  # Default value, will be rewrote as instance's class attribute by get_code_id(cls)
+    code_var_name = None  # Default value, will be rewrote with composed
+    # variable name as an instance attribute.
+    code_var_counters = {}  # Default value, will be rewrote as instance's
+    # class attribute by get_code_id(cls)
 
     @classmethod
     def get_code_id(cls, var_prefix='default'):
 
         """
-        Increment code id. For example, the script already has `button1=...` line,
-        so for a new button make `button2=... code`.
-        The idea is the CodeGenerator's default value code_var_counters['var_prefix'] will be overwrote by this funk
+        Increment code id. For example, the script already has
+        `button1=...` line, so for a new button make `button2=... code`.
+        The idea is the CodeGenerator's default value
+        code_var_counters['var_prefix'] will be overwrote by this funk
         as a control's wrapper class(e.g Pwa_window) attribute.
-        Its non default value will be shared for all the control's wrapper class(e.g Pwa_window) instances.
+        Its non default value will be shared for all the control's wrapper
+        class(e.g Pwa_window) instances.
         """
 
         if var_prefix not in cls.code_var_counters:
@@ -152,7 +163,8 @@ class CodeGenerator(object):
     def get_code_self(self):
 
         """
-        Composes code to access the control. E. g.: `button1 = calcframe1['Button12']`
+        Composes code to access the control.
+        E. g.: `button1 = calcframe1['Button12']`
         Pattern may use the next argument:
         * {var}
         * {parent_var}
@@ -162,7 +174,9 @@ class CodeGenerator(object):
 
         pattern = self._code_self
         if pattern:
-            self.code_var_name = self.code_var_pattern.format(id=self.get_code_id(self.code_var_pattern))
+            self.code_var_name = self.code_var_pattern.format(
+                id=self.get_code_id(self.code_var_pattern))
+
             format_kwargs = {'var': self.code_var_name}
             try:
                 main_parent = self.code_parents[0]
@@ -194,15 +208,20 @@ class CodeGenerator(object):
         if self.parent:
             format_kwargs['parent_var'] = self.parent.code_var_name
 
-        if self.code_parents[0]:
-            format_kwargs['main_parent_var'] = self.code_parents[0].code_var_name
+        try:
+            main_parent = self.code_parents[0]
+        except IndexError:
+            main_parent = None
+
+        if main_parent:
+            format_kwargs['main_parent_var'] = main_parent.code_var_name
 
         return self._code_action.format(**format_kwargs)
 
     def get_code_close(self):
 
         """
-        Composes code to close the access to thethe control. E. g.: `app.Kill_()`
+        Composes code to close the access to the control. E.g.: `app.Kill_()`
         Pattern may use the next argument:
         * {var}
         * {parent_var}
@@ -216,8 +235,13 @@ class CodeGenerator(object):
             if self.parent:
                 format_kwargs['parent_var'] = self.parent.code_var_name
 
-            if self.code_parents[0]:
-                format_kwargs['main_parent_var'] = self.code_parents[0].code_var_name
+            try:
+                main_parent = self.code_parents[0]
+            except IndexError:
+                main_parent = None
+
+            if main_parent:
+                format_kwargs['main_parent_var'] = main_parent.code_var_name
 
             return pattern.format(**format_kwargs)
         return ""
@@ -225,11 +249,10 @@ class CodeGenerator(object):
     def Get_code(self, action=None):
 
         """
-        Return all the code nneded to make the action on the control.
+        Return all the code needed to make the action on the control.
         Walk parents if needed.
         """
 
-        #code = ""
         if self.code_var_name is None:
             # parent/s code is not inited
             code_parents = self.code_parents[:]
@@ -238,28 +261,27 @@ class CodeGenerator(object):
             for p in code_parents:
                 if not p.code_var_name:
                     parent_init_code = p.get_code_self()
-                    #code += parent_init_code
-                    self.code_manager.add(CodeSnippet(init_code=parent_init_code,
-                                                      close_code=p.get_code_close()))
+
+                    self.code_manager.add(
+                        CodeSnippet(init_code=parent_init_code,
+                                    close_code=p.get_code_close()))
 
             self_code_self = self.get_code_self()  # self access code
-            #code += self_code_self
-            self.code_manager.add(CodeSnippet(init_code=self_code_self,
-                                              close_code=self.get_code_close()))
+            close_code = self.get_code_close()
+            if self_code_self or close_code:
+                self.code_manager.add(CodeSnippet(init_code=self_code_self,
+                                                  close_code=close_code))
         if action:
             self_code_action = self.get_code_action(action)  # self action code
-            #code += self_code_action
             self.code_manager.add(CodeSnippet(action_code=self_code_action))
 
-        #print self.code_manager
-
-        #return code
         return self.code_manager.get_full_code()
 
 
 if __name__ == '__main__':
     c1 = CodeSnippet('with Start_ as app:', 'frame1 = app.Frame', '', True)
-    c2 = CodeSnippet('button1 = frame1.button', 'button1.Click()', 'del button1')
+    c2 = CodeSnippet('button1 = frame1.button', 'button1.Click()',
+                     'del button1')
     c3 = CodeSnippet('button2 = frame1.button', 'button2.Click()')
     c4 = CodeSnippet('with Start_ as app:', 'frame2 = app.Frame', '', True)
     c5 = CodeSnippet('', 'button1.Click()')
