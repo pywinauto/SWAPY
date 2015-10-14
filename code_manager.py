@@ -222,7 +222,7 @@ class CodeGenerator(object):
             return pattern.format(**format_kwargs)
         return ""
 
-    def Get_code(self, action):
+    def Get_code(self, action=None):
 
         """
         Return all the code nneded to make the action on the control.
@@ -246,10 +246,10 @@ class CodeGenerator(object):
             #code += self_code_self
             self.code_manager.add(CodeSnippet(init_code=self_code_self,
                                               close_code=self.get_code_close()))
-
-        self_code_action = self.get_code_action(action)  # self action code
-        #code += self_code_action
-        self.code_manager.add(CodeSnippet(action_code=self_code_action))
+        if action:
+            self_code_action = self.get_code_action(action)  # self action code
+            #code += self_code_action
+            self.code_manager.add(CodeSnippet(action_code=self_code_action))
 
         #print self.code_manager
 

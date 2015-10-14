@@ -99,29 +99,38 @@ class PwaWrapper(object):
             subitems_encoded.append((name, obj))
         return subitems_encoded
         
-    def Exec_action(self, action_id):
+    def Exec_action(self, action):
         '''
         Execute action on the control
         '''
-        action = ACTIONS[action_id]
         #print('self.pwa_obj.'+action+'()')
         exec('self.pwa_obj.'+action+'()')
         return 0
         
     def Get_actions(self):
-        '''
+
+        """
         return allowed actions for this object. [(id,action_name),...]
-        '''
+        """
+
         allowed_actions = []
         try:
             obj_actions = dir(self.pwa_obj.WrapperObject())
         except:
             obj_actions = dir(self.pwa_obj)
-        for id, action in ACTIONS.items():
+        for _id, action in ACTIONS.items():
             if action in obj_actions:
-                allowed_actions.append((id,action))
+                allowed_actions.append((_id, action))
         allowed_actions.sort(key=lambda name: name[1].lower())
         return allowed_actions
+
+    def Get_extended_actions(self):
+
+        """
+        Extended actions
+        """
+
+        return []
 
     def Highlight_control(self): 
         if self._check_visibility():
@@ -435,6 +444,14 @@ class SWAPYObject(PwaWrapper, CodeGenerator):
         return "{var_prefix}{id}".format(var_prefix=var_prefix,
                                          id="{id}")
 
+    def SetCodestyle(self, extended_action_id):
+
+        """
+        Switch a control codestyle regarding extended_action_id
+        """
+
+        pass
+
 
 class VirtualSWAPYObject(SWAPYObject):
     def __init__(self, parent, index):
@@ -575,17 +592,48 @@ class Pwa_window(SWAPYObject):
     code_self_pattern_item = "{var} = app_{var}['{access_name}']"
     code_self_close = "app_{var}.Kill_()"
 
+    def __init__(self, *args, **kwargs):
+        # Set default style
+        self.code_self_style = self.__code_self_connect
+        self.code_close_style = self.__code_close_connect
+        return super(Pwa_window, self).__init__(*args, **kwargs)
+
+    def __code_self_connect(self):
+        title = self.pwa_obj.WindowText().encode('unicode-escape')
+        cls_name = self.pwa_obj.Class()
+        code = "\napp_{var} = Application().Connect(title=u'{title}', " \
+               "class_name='{cls_name}')\n".format(title=title,
+                                                   cls_name=cls_name,
+                                                   var="{var}")
+        return code
+
+    def __code_self_start(self):
+        target_pid = self.pwa_obj.ProcessID()
+        cmd_line = None
+        process_modules = pywinauto.application._process_get_modules_wmi()
+        for pid, name, cmdline in process_modules:
+            if pid == target_pid:
+                cmd_line = cmdline
+                break
+
+        code = "\napp_{var} = Application().Start(cmd_line=u'{cmd_line}')\n"\
+            .format(cmd_line=cmd_line.encode('unicode-escape'),
+                    var="{var}")
+        return code
+
+    def __code_close_connect(self):
+        return ""
+
+    def __code_close_start(self):
+        return self.code_self_close.format(var="{var}")
+
     @property
     def _code_self(self):
         code = ""
         if not self._get_additional_properties()['Access names']:
             raise NotImplementedError
         else:
-            code += "\napp_{var} = Application().Connect_(title=u'{title}'," \
-                    "class_name='{cls_name}')\n".format(title=self.pwa_obj.WindowText().encode('unicode-escape',
-                                                                                               'replace'),
-                                                        cls_name=self.pwa_obj.Class(),
-                                                        var="{var}")
+            code += self.code_self_style()
             code += super(Pwa_window, self)._code_self
 
         return code
@@ -597,8 +645,7 @@ class Pwa_window(SWAPYObject):
         Rewrite default behavior.
         """
 
-        code = ""
-        #code = self.code_self_close.format(var="{var}")
+        code = self.code_close_style()
 
         return code
 
@@ -638,6 +685,29 @@ class Pwa_window(SWAPYObject):
             pass
         #---
         return additional_properties
+
+    def Get_extended_actions(self):
+
+        """
+        Extended actions
+        """
+
+        return [(_id, action) for _id, action in EXTENDED_ACTIONS.items()]
+
+    def SetCodestyle(self, extended_action_id):
+
+        """
+        Switch to `Start` or `Connect` code
+        """
+
+        if extended_action_id == 301:  # Start
+            self.code_self_style = self.__code_self_start
+            self.code_close_style = self.__code_close_start
+        elif extended_action_id == 302:  # Connect
+            self.code_self_style = self.__code_self_connect
+            self.code_close_style = self.__code_close_connect
+        else:
+            raise RuntimeError("Unknown menu id - %s" % extended_action_id)
 
 
 class Pwa_menu(SWAPYObject):
