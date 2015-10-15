@@ -905,7 +905,7 @@ class Pwa_tab(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
-            additional_children += [(text, virtual_tab_item(self, text))]
+            additional_children += [(text, virtual_tab_item(self, index))]
         return additional_children
 
 
