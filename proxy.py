@@ -594,8 +594,8 @@ class Pwa_window(SWAPYObject):
 
     def __init__(self, *args, **kwargs):
         # Set default style
-        self.code_self_style = self.__code_self_connect
-        self.code_close_style = self.__code_close_connect
+        self.code_self_style = self.__code_self_start
+        self.code_close_style = self.__code_close_start
         return super(Pwa_window, self).__init__(*args, **kwargs)
 
     def __code_self_connect(self):
@@ -611,14 +611,13 @@ class Pwa_window(SWAPYObject):
         target_pid = self.pwa_obj.ProcessID()
         cmd_line = None
         process_modules = pywinauto.application._process_get_modules_wmi()
-        for pid, name, cmdline in process_modules:
+        for pid, name, process_cmdline in process_modules:
             if pid == target_pid:
-                cmd_line = cmdline
+                cmd_line = os.path.normpath(process_cmdline)
+                cmd_line = cmd_line.encode('unicode-escape')
                 break
-
         code = "\napp_{var} = Application().Start(cmd_line=u'{cmd_line}')\n"\
-            .format(cmd_line=cmd_line.encode('unicode-escape'),
-                    var="{var}")
+            .format(cmd_line=cmd_line, var="{var}")
         return code
 
     def __code_close_connect(self):
@@ -635,6 +634,8 @@ class Pwa_window(SWAPYObject):
         else:
             code += self.code_self_style()
             code += super(Pwa_window, self)._code_self
+            if self.code_self_style == self.__code_self_start:
+                code += "\n{var}.Wait('ready')"
 
         return code
 
@@ -708,6 +709,13 @@ class Pwa_window(SWAPYObject):
             self.code_close_style = self.__code_close_connect
         else:
             raise RuntimeError("Unknown menu id - %s" % extended_action_id)
+
+        if self.code_snippet is not None:
+            # Refresh self code after the changing of the code style
+            own_code_self = self.get_code_self()
+            own_close_code = self.get_code_close()
+            self.code_snippet.update(init_code=own_code_self,
+                                     close_code=own_close_code)
 
 
 class Pwa_menu(SWAPYObject):
@@ -1054,7 +1062,7 @@ class Pwa_tree_item(SWAPYObject):
         path = self.path
         for i in range(len(path)):
             if isinstance(path[i], unicode):
-                path[i] = "'%s'" % path[i].encode('unicode-escape', 'replace')
+                path[i] = '%s' % path[i].encode('unicode-escape', 'replace')
 
         code = self.code_self_pattern.format(path=path,
                                              var="{var}",

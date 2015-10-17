@@ -28,25 +28,38 @@ install:
   #- ECHO "Notepad location "
   #- ps: "ls C:\\Windows\\System32\\notepad.exe"
 
-  # install wxPython
    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-   - "%CMD_IN_ENV% powershell ./ci/install.ps1"
 
-  # Install the build dependencies of the project.
+   # Install the build dependencies of the project.
    - "%CMD_IN_ENV% pip install -r dev-requirements.txt"
 
    # Install pywinauto from the trunk
    - "%CMD_IN_ENV% pip install -e git+https://github.com/pywinauto/pywinauto.git@master#egg=pywinauto-trunk"
 
+   # Print python modules
+   - "%CMD_IN_ENV% pip freeze"
+
 build: off  # disable automatic builds
 
+
+before_build:
+  # Download sample apps
+  - "%CMD_IN_ENV% svn checkout https://github.com/pywinauto/pywinauto/trunk/apps ./apps"
+  # Run unittests
+  - "%CMD_IN_ENV% python -m unittest discover"
+
 build_script:
+  # install wxPython
+  - "%CMD_IN_ENV% powershell ./ci/install.ps1"
+  # Print python modules again
   - "%CMD_IN_ENV% pip freeze"
+  # Build UI
   - "%CMD_IN_ENV% powershell ./ci/build.ps1"
 
+
 #test_script:
-#  # Build the compiled extension and run the project tests
-#  - "%CMD_IN_ENV% powershell ./build.ps1"
+#  # Run UI tests
+
 
 artifacts:
   # Archive the generated coverage report in the ci.appveyor.com build report.
