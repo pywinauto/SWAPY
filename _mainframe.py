@@ -161,7 +161,7 @@ class Frame1(wx.Frame):
                 if extended_actions:
                     for _id, extended_action_name in extended_actions:
                         menu.Append(_id, extended_action_name)
-                        if not obj._check_actionable() or obj.code_var_name:
+                        if not obj._check_actionable():
                             menu.Enable(_id, False)
                     menu.AppendSeparator()
 
@@ -265,7 +265,6 @@ class Frame1(wx.Frame):
         self.textCtrl_Editor.SetForegroundColour(wx.BLACK)
         self.textCtrl_Editor.SetValue(code)
 
-        
     def _init_windows_tree(self):
         self.treeCtrl_ObjectsBrowser.DeleteAllItems()
         item_data = wx.TreeItemData()
