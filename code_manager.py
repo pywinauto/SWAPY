@@ -60,7 +60,7 @@ class CodeSnippet(object):
         """
         Update code.
         Updates only passed the args.
-        To clear a code use emty line. For instance
+        To clear a code use empty line. For instance
         .update(init_code='new init code',
                 action_code='')  # Erase old action_code
         """
