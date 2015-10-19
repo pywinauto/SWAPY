@@ -1,4 +1,4 @@
-# unit tests for codegenerator
+# unit tests for code generator
 # Copyright (C) 2015 Matiychuk D.
 #
 # This library is free software; you can redistribute it and/or
@@ -40,10 +40,15 @@ def get_proxy_object(pwa_window, path):
     else:
         proxy_object = proxy.Pwa_window(pwa_window)
     for target_sub in path:
-        for name, pwa_object in proxy_object.Get_subitems():
+        subitems = proxy_object.Get_subitems()
+        if not subitems:
+            raise RuntimeError("'%s' cannot be found" % target_sub)
+        for name, pwa_object in subitems:
             if target_sub == name:
                 proxy_object = pwa_object
                 break
+        else:
+            raise RuntimeError("Invalid path, '%s' not found" % target_sub)
 
     return proxy_object
 
@@ -57,9 +62,8 @@ def test_app(filename):
     else:
         sample_exe = os.path.join(mfc_samples_folder, filename)
 
-    app = Application().start(sample_exe)
+    app = Application().start(sample_exe, timeout=3)
     app_path = os.path.normpath(sample_exe).encode('unicode-escape')
-    app.top_window_().Wait('ready')
     try:
         yield app, app_path
     except:
@@ -89,6 +93,30 @@ class BaseTestCase(unittest.TestCase):
         code_manager.CodeManager().clear()  # Clear single tone CodeManager
         reload(code_manager)  # Reset class's counters
         reload(proxy)  # Reset class's counters
+
+
+class ObjectBrowserTestCases(BaseTestCase):
+
+    def testNestedControl(self):
+
+        direct_path = (u'Common Controls Sample',
+                       u'Treeview1, Birds, Eagle, Hummingbird, Pigeon',
+                       u'Birds',
+                       )
+
+        indirect_path = (u'Common Controls Sample',
+                         u'CTreeCtrl',
+                         u'Treeview1, Birds, Eagle, Hummingbird, Pigeon',
+                         u'Birds',
+                         )
+
+        with test_app("CmnCtrl1.exe") as (app, app_path):
+            self.assertRaises(RuntimeError, get_proxy_object,
+                              None, indirect_path)
+
+            proxy_obj = get_proxy_object(None, direct_path)
+            self.assertEqual(proxy_obj.pwa_obj.elem,
+                             app.Dialog.TreeView.GetItem(['Birds']).elem)
 
 
 class CodeGeneratorTestCases(BaseTestCase):
@@ -225,7 +253,8 @@ class ControlsCodeTestCases(BaseTestCase):
             "{win_ident}1 = {app_ident}1['RowList Sample Application']\n" \
             "{win_ident}1.Wait('ready')\n" \
             "syslistview1 = {win_ident}1['1']\n" \
-            "syslistview1.Click()\n\n" \
+            "listview_item1 = syslistview1.GetItem('Gray')\n" \
+            "listview_item1.Click()\n\n" \
             "{app_ident}1.Kill_()"
 
         path = (u'RowList Sample Application',
@@ -236,7 +265,7 @@ class ControlsCodeTestCases(BaseTestCase):
                 u'255, 120, 240, 120, Cool, Blue, 0, 0, 255, 160, 240, 120, '
                 u'Cool, Gray, 192, 192, 192, 160, 0, 181, Neutral',
 
-                u'Line',
+                u'Gray',
                 )
 
         with test_app("RowList.exe") as (app, app_path):

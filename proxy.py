@@ -182,6 +182,11 @@ class PwaWrapper(object):
         [(control_text, swapy_obj),...]
         """
 
+        if self.pwa_obj.Parent():
+            # Hide children of the non top level window control.
+            # Expect all the children are accessible from the top level window.
+            return []
+
         u_names = None
         children = []
         children_controls = self.pwa_obj.Children()
@@ -189,10 +194,13 @@ class PwaWrapper(object):
             try:
                 texts = child_control.Texts()
             except exceptions.WindowsError:
-                #texts = ['Unknown control name2!'] #workaround for WindowsError: [Error 0] ...
+                # texts = ['Unknown control name2!'] #workaround for
+                # WindowsError: [Error 0] ...
                 texts = None
             except exceptions.RuntimeError:
-                #texts = ['Unknown control name3!'] #workaround for RuntimeError: GetButtonInfo failed for button with command id 256
+                # texts = ['Unknown control name3!'] #workaround for
+                # RuntimeError: GetButtonInfo failed for button
+                # with command id 256
                 texts = None
 
             if texts:
@@ -201,12 +209,14 @@ class PwaWrapper(object):
             if texts:  # check again after the filtering
                 title = ', '.join(texts)
             else:
-                # .Texts() does not have a useful title, trying get it from the uniqnames
+                # .Texts() does not have a useful title, trying get it
+                # from the uniqnames
                 if u_names is None:
                     # init unames list
                     u_names = self.__get_uniq_names()
 
-                child_uniq_name = [uniq_name for uniq_name, obj in u_names if obj.WrapperObject() == child_control]
+                child_uniq_name = [u_name for u_name, obj in u_names
+                                   if obj.WrapperObject() == child_control]
 
                 if child_uniq_name:
                     title = child_uniq_name[-1]
