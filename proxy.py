@@ -769,7 +769,7 @@ class Pwa_menu(SWAPYObject):
         menu_items = self.pwa_obj.Items()
         for menu_item in menu_items:
             item_text = menu_item.Text()
-            if item_text == '':
+            if not item_text:
                 if menu_item.Type() == 2048:
                     item_text = '-----Separator-----'
                 else:
@@ -849,9 +849,14 @@ class Pwa_combobox(SWAPYObject):
         Add ComboBox items as children
         '''
         additional_children = []
-        items_texts = self.pwa_obj.ItemTexts()
-        for item_name in items_texts:
-            additional_children += [(item_name, virtual_combobox_item(self, item_name))]
+        for i, text in enumerate(self.pwa_obj.ItemTexts()):
+            if not text:
+                text = "option #%s" % i
+                additional_children.append((text,
+                                            virtual_combobox_item(self, i)))
+            else:
+                additional_children.append((text,
+                                            virtual_combobox_item(self, text)))
         return additional_children
 
 
@@ -864,7 +869,7 @@ class virtual_combobox_item(VirtualSWAPYObject):
             if name == text:
                 index = i
                 break
-        return {'Index' : index, 'Text' : text} # .encode('unicode-escape', 'replace')}
+        return {'Index': index, 'Text': text}
 
 
 class Pwa_listview(SWAPYObject):
@@ -875,8 +880,12 @@ class Pwa_listview(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.ItemCount()):
             item = self.pwa_obj.GetItem(index)
-        #for item in self.pwa_obj.Items(): #Wait for the fix https://github.com/pywinauto/pywinauto/issues/97
-            additional_children += [(item['text'], listview_item(item, self))]
+        # for item in self.pwa_obj.Items():
+        # Wait for the fix https://github.com/pywinauto/pywinauto/issues/97
+            text = item['text']
+            if not text:
+                text = "option #%s" % index
+            additional_children += [(text, listview_item(item, self))]
         return additional_children
 
 
@@ -923,6 +932,8 @@ class Pwa_tab(SWAPYObject):
         additional_children = []
         for index in range(self.pwa_obj.TabCount()):
             text = self.pwa_obj.GetTabText(index)
+            if not text:
+                text = "tab #%s" % index
             additional_children += [(text, virtual_tab_item(self, index))]
         return additional_children
 
@@ -958,6 +969,8 @@ class Pwa_toolbar(SWAPYObject):
             try:
                 button = self.pwa_obj.Button(button_index)
                 button_text = button.info.text
+                if not button_text:
+                    button_text = "button #%s" % button_index
                 button_object = self._get_swapy_object(button)
             except exceptions.RuntimeError:
                 #button_text = ['Unknown button name1!'] #workaround for RuntimeError: GetButtonInfo failed for button with index 0
@@ -981,7 +994,11 @@ class Pwa_toolbar_button(SWAPYObject):
 
     @property
     def _code_self(self):
-        index = self.pwa_obj.info.text
+        text = self.pwa_obj.info.text
+        if not text:
+            index = self.pwa_obj.index
+        else:
+            index = text
         if isinstance(index, unicode):
             index = "'%s'" % index.encode('unicode-escape', 'replace')
 
