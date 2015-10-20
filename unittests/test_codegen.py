@@ -119,6 +119,42 @@ class ObjectBrowserTestCases(BaseTestCase):
                              app.Dialog.TreeView.GetItem(['Birds']).elem)
 
 
+class EmptyTextsTestCases(BaseTestCase):
+
+    def testToolbarCode(self):
+        expected_code = \
+            "from pywinauto.application import Application\n\n" \
+            "{app_ident}1 = Application().Start(cmd_line=u'{app_path}')\n" \
+            "{win_ident}1 = {app_ident}1['RowList Sample Application']\n" \
+            "{win_ident}1.Wait('ready')\n" \
+            "toolbarwindow1 = {win_ident}1['4']\n" \
+            "pwa_toolbar_button1 = toolbarwindow1.Button(9)\n" \
+            "pwa_toolbar_button1.Click()\n\n" \
+            "{app_ident}1.Kill_()"
+
+        path = (u'RowList Sample Application',
+                u'Toolbar',
+                u'button #9',
+                )
+
+        with test_app("RowList.exe") as (app, app_path):
+
+            window = app.top_window_()
+
+            class_name = window.GetProperties()['Class']
+            crtl_class = filter(lambda c: c in string.ascii_letters,
+                                class_name).lower()
+
+            proxy_obj = get_proxy_object(None, path)
+            code = proxy_obj.Get_code('Click')
+
+        expected_code = expected_code.format(app_ident="app_%s" % crtl_class,
+                                             app_path=app_path,
+                                             class_name=class_name,
+                                             win_ident=crtl_class)
+        self.assertEquals(expected_code, code)
+
+
 class CodeGeneratorTestCases(BaseTestCase):
 
     def testInitAllParents(self):
@@ -246,6 +282,31 @@ class ControlsCodeTestCases(BaseTestCase):
         expected_code = expected_code.format(app_path=app_path)
         self.assertEquals(expected_code, code)
 
+    def testMenuCode(self):
+        expected_code = \
+            "from pywinauto.application import Application\n\n" \
+            "app_pwa_window1 = Application().Start(cmd_line=u'{app_path}')\n" \
+            "pwa_window1 = app_pwa_window1.Dialog\n" \
+            "pwa_window1.Wait('ready')\n" \
+            "pwa_menu_item1 = pwa_window1.MenuItem" \
+            "(u'&Help->&About mymenu...')\n" \
+            "pwa_menu_item1.Click()\n\n" \
+            "app_pwa_window1.Kill_()"
+
+        path = (u'BCDialogMenu',
+                u'!Menu',
+                u'&Help',
+                u'&Help submenu',
+                u'&About mymenu...'
+                )
+
+        with test_app("BCDialogMenu.exe") as (app, app_path):
+            proxy_obj = get_proxy_object(None, path)
+            code = proxy_obj.Get_code('Click')
+
+        expected_code = expected_code.format(app_path=app_path)
+        self.assertEquals(expected_code, code)
+
     def testSysListView32Code(self):
         expected_code = \
             "from pywinauto.application import Application\n\n" \
@@ -269,9 +330,8 @@ class ControlsCodeTestCases(BaseTestCase):
                 )
 
         with test_app("RowList.exe") as (app, app_path):
-            window = Application().Connect(
-                title=u'RowList Sample Application')[
-                'RowList Sample Application']
+
+            window = app.top_window_()
 
             class_name = window.GetProperties()['Class']
             crtl_class = filter(lambda c: c in string.ascii_letters,
