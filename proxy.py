@@ -246,6 +246,8 @@ class PwaWrapper(object):
             return 'menu_item'
         elif type(obj) == pywinauto.controls.win32_controls.ComboBoxWrapper:
             return 'combobox'
+        elif type(obj) == pywinauto.controls.win32_controls.ListBoxWrapper:
+            return 'listbox'
         elif type(obj) == pywinauto.controls.common_controls.ListViewWrapper:
             return 'listview'
         elif type(obj) == pywinauto.controls.common_controls.TabControlWrapper:
@@ -272,6 +274,8 @@ class PwaWrapper(object):
             return Pwa_menu_item(pwa_obj, self)
         if pwa_type == 'combobox':
             return Pwa_combobox(pwa_obj, self)
+        if pwa_type == 'listbox':
+            return Pwa_listbox(pwa_obj, self)
         if pwa_type == 'listview':
             return Pwa_listview(pwa_obj, self)
         if pwa_type == 'tab':
@@ -872,36 +876,78 @@ class virtual_combobox_item(VirtualSWAPYObject):
         return {'Index': index, 'Text': text}
 
 
+class Pwa_listbox(SWAPYObject):
+
+    def _get_additional_children(self):
+
+        """
+        Add ListBox items as children
+        """
+
+        additional_children = []
+        for i, text in enumerate(self.pwa_obj.ItemTexts()):
+            if not text:
+                text = "option #%s" % i
+                additional_children.append((text,
+                                            virtual_listbox_item(self, i)))
+            else:
+                additional_children.append((text,
+                                            virtual_listbox_item(self, text)))
+        return additional_children
+
+
+class virtual_listbox_item(VirtualSWAPYObject):
+
+    def _get_properies(self):
+        index = None
+        text = self.index
+        for i, name in enumerate(self.parent.pwa_obj.ItemTexts()):
+            if name == text:
+                index = i
+                break
+        return {'Index': index, 'Text': text}
+
+
 class Pwa_listview(SWAPYObject):
     def _get_additional_children(self):
         '''
         Add SysListView32 items as children
         '''
         additional_children = []
-        for index in range(self.pwa_obj.ItemCount()):
-            item = self.pwa_obj.GetItem(index)
-        # for item in self.pwa_obj.Items():
-        # Wait for the fix https://github.com/pywinauto/pywinauto/issues/97
-            text = item['text']
+        for item in self.pwa_obj.Items():
+            text = item.Text()
             if not text:
-                text = "option #%s" % index
+                index = item.item_index
+                column_index = item.subitem_index
+                text = "option #%s,%s" % (index, column_index)
             additional_children += [(text, listview_item(item, self))]
         return additional_children
 
 
 class listview_item(SWAPYObject):
 
-    code_self_pattern = "{var} = {parent_var}.GetItem('{index}')"
+    code_self_patt_text = "{var} = {parent_var}.GetItem('{text}')"
+    code_self_patt_index = "{var} = {parent_var}.GetItem({index}, {col_index})"
 
     @property
     def _code_self(self):
-        code = self.code_self_pattern.format(index=self.pwa_obj.ItemData()['text'],
-                                             parent_var="{parent_var}",
-                                             var="{var}")
+        text = self.pwa_obj.Text()
+        if not text:
+            index = self.pwa_obj.item_index
+            col_index = self.pwa_obj.subitem_index
+            code = self.code_self_patt_index.format(index=index,
+                                                    col_index=col_index,
+                                                    parent_var="{parent_var}",
+                                                    var="{var}")
+        else:
+            code = self.code_self_patt_text.format(text=text,
+                                                   parent_var="{parent_var}",
+                                                   var="{var}")
         return code
 
     def _get_properies(self):
-        item_properties = {'index': self.pwa_obj.item_index}
+        item_properties = {'index': self.pwa_obj.item_index,
+                           'column_index': self.pwa_obj.subitem_index}
         item_properties.update(self.pwa_obj.ItemData())
         return item_properties
 
