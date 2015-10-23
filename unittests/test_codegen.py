@@ -282,6 +282,29 @@ class ControlsCodeTestCases(BaseTestCase):
         expected_code = expected_code.format(app_path=app_path)
         self.assertEquals(expected_code, code)
 
+    def testListBoxCode(self):
+        expected_code = \
+            "from pywinauto.application import Application\n\n" \
+            "app_pwa_window1 = Application().Start(cmd_line=u'{app_path}')\n" \
+            "pwa_window1 = app_pwa_window1.Dialog\n" \
+            "pwa_window1.Wait('ready')\n" \
+            "listbox1 = pwa_window1.ListBox\n" \
+            "listbox1.Select('BCSS_IMAGE')\n\n" \
+            "app_pwa_window1.Kill_()"
+
+        path = (u'Common Controls Sample',
+                u'BCSS_NOSPLIT, BCSS_STRETCH, BCSS_ALIGNLEFT, BCSS_IMAGE',
+                u'BCSS_IMAGE',
+                )
+
+        with test_app("CmnCtrl3.exe") as (app, app_path):
+            app.Dialog.TabControl.Select('CSplitButton')  # open needed tab
+            proxy_obj = get_proxy_object(None, path)
+            code = proxy_obj.Get_code('Select')
+
+        expected_code = expected_code.format(app_path=app_path)
+        self.assertEquals(expected_code, code)
+
     def testMenuCode(self):
         expected_code = \
             "from pywinauto.application import Application\n\n" \
@@ -338,6 +361,7 @@ class ControlsCodeTestCases(BaseTestCase):
                                 class_name).lower()
 
             proxy_obj = get_proxy_object(None, path)
+            self.assertEquals(len(proxy_obj.pwa_obj.listview_ctrl.Items()), 56)
             code = proxy_obj.Get_code('Click')
 
         expected_code = expected_code.format(app_ident="app_%s" % crtl_class,
