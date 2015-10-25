@@ -182,7 +182,7 @@ class PwaWrapper(object):
         [(control_text, swapy_obj),...]
         """
 
-        if self.pwa_obj.Parent():
+        if self.pwa_obj.Parent() and isinstance(self.parent, Pwa_window):
             # Hide children of the non top level window control.
             # Expect all the children are accessible from the top level window.
             return []
