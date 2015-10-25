@@ -118,6 +118,22 @@ class ObjectBrowserTestCases(BaseTestCase):
             self.assertEqual(proxy_obj.pwa_obj.elem,
                              app.Dialog.TreeView.GetItem(['Birds']).elem)
 
+    def testNestedTopWindow(self):
+
+        path = (u'About RowList',
+                u'RowList Version 1.0',
+                )
+
+        with test_app("RowList.exe") as (app, app_path):
+            app['RowList Sample Application'].MenuItem(
+                u'&Help->&About RowList...').Select()  # open About dialog
+            try:
+                proxy_obj = self.get_proxy_object(path)
+            except RuntimeError:
+                self.fail("Controls of a nested top window are not accessible")
+            self.assertEqual(proxy_obj.pwa_obj.Texts(),
+                             [u'RowList Version 1.0'])
+
 
 class EmptyTextsTestCases(BaseTestCase):
 
