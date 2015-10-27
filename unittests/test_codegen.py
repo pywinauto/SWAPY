@@ -178,7 +178,7 @@ class CodeGeneratorTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "systreeview = window.TreeView\n" \
-            "tree_item = systreeview.GetItem(['Birds'])\n" \
+            "tree_item = systreeview.GetItem([u'Birds'])\n" \
             "tree_item.Expand()\n\n" \
             "app.Kill_()"
 
@@ -201,7 +201,7 @@ class CodeGeneratorTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "systreeview = window.TreeView\n" \
-            "tree_item = systreeview.GetItem(['Birds'])\n" \
+            "tree_item = systreeview.GetItem([u'Birds'])\n" \
             "tree_item.Expand()\n" \
             "tree_item.Click()\n\n" \
             "app.Kill_()"
@@ -227,7 +227,7 @@ class CodeGeneratorTestCases(BaseTestCase):
             "class_name='#32770')\n" \
             "window = app.Dialog\n" \
             "systreeview = window.TreeView\n" \
-            "tree_item = systreeview.GetItem(['Birds'])\n" \
+            "tree_item = systreeview.GetItem([u'Birds'])\n" \
             "tree_item.Expand()\n\n"
 
         expected_code_start = \
@@ -236,7 +236,7 @@ class CodeGeneratorTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "systreeview = window.TreeView\n" \
-            "tree_item = systreeview.GetItem(['Birds'])\n" \
+            "tree_item = systreeview.GetItem([u'Birds'])\n" \
             "tree_item.Expand()\n\n" \
             "app.Kill_()"
 
@@ -279,7 +279,7 @@ class CodeGeneratorTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "systreeview = window.TreeView\n" \
-            "tree_item = systreeview.GetItem(['Birds'])\n" \
+            "tree_item = systreeview.GetItem([u'Birds'])\n" \
             "tree_item.Expand()\n\n" \
             "app.Kill_()"
 
@@ -289,7 +289,7 @@ class CodeGeneratorTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "systreeview = window.TreeView\n" \
-            "tree_item = systreeview.GetItem(['Birds'])\n" \
+            "tree_item = systreeview.GetItem([u'Birds'])\n" \
             "tree_item.Expand()\n\n" \
             "app2 = Application().Start(cmd_line=u'{app_path2}')\n" \
             "window2 = app2.Dialog\n" \
@@ -335,7 +335,7 @@ class ControlsCodeTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "combobox = window.ComboBox\n" \
-            "combobox.Select('Gray')\n\n" \
+            "combobox.Select(u'Gray')\n\n" \
             "app.Kill_()"
 
         path = (u'Common Controls Sample',
@@ -357,7 +357,7 @@ class ControlsCodeTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "listbox = window.ListBox\n" \
-            "listbox.Select('BCSS_IMAGE')\n\n" \
+            "listbox.Select(u'BCSS_IMAGE')\n\n" \
             "app.Kill_()"
 
         path = (u'Common Controls Sample',
@@ -405,7 +405,7 @@ class ControlsCodeTestCases(BaseTestCase):
             "{win_ident} = app['RowList Sample Application']\n" \
             "{win_ident}.Wait('ready')\n" \
             "syslistview = {win_ident}['1']\n" \
-            "listview_item = syslistview.GetItem('Gray')\n" \
+            "listview_item = syslistview.GetItem(u'Gray')\n" \
             "listview_item.Click()\n\n" \
             "app.Kill_()"
 
@@ -468,7 +468,7 @@ class ControlsCodeTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "toolbarwindow = window.Toolbar2\n" \
-            "toolbar_button = toolbarwindow.Button('Line')\n" \
+            "toolbar_button = toolbarwindow.Button(u'Line')\n" \
             "toolbar_button.Click()\n\n" \
             "app.Kill_()"
 
