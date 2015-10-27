@@ -44,8 +44,23 @@ ACTIONS = {101: 'Close',
            123: 'Expand',
            }
 
-EXTENDED_ACTIONS = {301: 'Application.Start',
-                    302: 'Application.Connect',
+EXTENDED_ACTIONS = {201: 'Application.Start',
+                    202: 'Application.Connect',
                     }
+
+PROPERTIES_ACTIONS = {301: 'Copy all',
+                      302: None,
+                      303: 'Copy property',
+                      304: 'Copy value',
+                      305: 'Copy unicode value',
+                      }
+
+EDITOR_ACTIONS = {401: 'Clear last command',
+                  402: 'Clear the code',
+                  403: None,
+                  404: 'Copy',
+                  405: 'Select all',
+                  406: None,
+                  407: 'Save code to file'}
             
 VERSION = '0.4.6'
