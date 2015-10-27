@@ -43,7 +43,10 @@ class CodeSnippet(object):
     `indent` means `action_code` and `close_code` should be under the indent.
     """
 
-    def __init__(self, init_code='', action_code='', close_code='',
+    INIT_SNIPPET = 1
+    ACTION_SNIPPET = 2
+
+    def __init__(self, owner, init_code='', action_code='', close_code='',
                  indent=False):
 
         if not init_code and not action_code and not close_code:
@@ -53,6 +56,7 @@ class CodeSnippet(object):
         self.action_code = action_code
         self.close_code = close_code
         self.indent = indent
+        self.owner = owner
 
     def update(self, init_code=None, action_code=None, close_code=None,
                indent=None):
@@ -76,10 +80,27 @@ class CodeSnippet(object):
         if indent is not None:
             self.indent = indent
 
+    @property
+    def types(self):
+
+        """
+        Return mask with INIT_SNIPPET and\or ACTION_SNIPPET flags
+        """
+
+        mask = 0
+        if self.init_code or self.close_code:
+            mask |= self.INIT_SNIPPET
+        if self.action_code:
+            mask |= self.ACTION_SNIPPET
+        return mask
+
     def __repr__(self):
         lines = []
-        for code in (self.init_code, self.action_code, self.close_code):
+        for code in ("init_code: %s" % self.init_code,
+                     "action_code: %s" % self.action_code,
+                     "close_code: %s" % self.close_code):
             lines.append(code)
+        lines.append('-'*40)
         return '\n'.join(lines)
 
 
@@ -92,18 +113,25 @@ class CodeManager(object):
     """
 
     single_object = None
+    inited = False
 
     def __new__(cls, *args, **kwargs):
-        if cls.single_object:
-            return cls.single_object
-        else:
+        if cls.single_object is None:
             new = super(CodeManager, cls).__new__(cls, *args, **kwargs)
             cls.single_object = new
             return new
+        else:
+            return cls.single_object
 
     def __init__(self, indent_symbols=' '*4):
-        self.snippets = []
-        self.indent_symbols = indent_symbols
+        if not self.inited:
+            self.snippets = []
+            self.indent_symbols = indent_symbols
+
+            self.inited = True
+
+    def __len__(self):
+        return len(self.snippets)
 
     def _line(self, code, indent_count=0):
         return "{indents}{code}".format(
@@ -114,7 +142,25 @@ class CodeManager(object):
         self.snippets.append(snippet)
 
     def clear(self):
-        self.snippets = []
+
+        """
+        Safely clear all the snippents. Reset all the code counters.
+        """
+
+        while self.snippets:
+            self.clear_last()
+
+    def clear_last(self):
+
+        """
+        Remove the latest snippet, decrease appropriate code counter
+        for snippets of INIT type.
+        """
+
+        if self.snippets:
+            last_snippet = self.snippets.pop()
+            if last_snippet.types & CodeSnippet.INIT_SNIPPET:
+                last_snippet.owner.release_variable()
 
     def get_full_code(self):
 
@@ -148,6 +194,19 @@ class CodeManager(object):
         full_code += "\n".join(endings[::-1])
         return full_code
 
+    def get_init_snippet(self, owner):
+
+        """
+        Return the owner's the first INIT snippet.
+        """
+
+        for snippet in self.snippets:
+            if snippet.owner == owner and \
+                    snippet.types & CodeSnippet.INIT_SNIPPET:
+                return snippet
+        else:
+            return None
+
     def __repr__(self):
         return self.get_full_code()
 
@@ -166,8 +225,6 @@ class CodeGenerator(object):
     code_var_counters = {}  # Default value, will be rewrote as instance's
     # class attribute by get_code_id(cls)
 
-    code_snippet = None  # Saves own code snippet to make possible change it.
-
     @classmethod
     def get_code_id(cls, var_prefix='default'):
 
@@ -181,12 +238,23 @@ class CodeGenerator(object):
         class(e.g Pwa_window) instances.
         """
 
-        if var_prefix not in cls.code_var_counters:
+        if var_prefix not in cls.code_var_counters or \
+                cls.code_var_counters[var_prefix] == 0:
             cls.code_var_counters[var_prefix] = 1
             return ''  # "app=..." instead of "app1=..."
+
         else:
             cls.code_var_counters[var_prefix] += 1
             return cls.code_var_counters[var_prefix]
+
+    @classmethod
+    def decrement_code_id(cls, var_prefix='default'):
+
+        """
+        Decrement code id.
+        """
+
+        cls.code_var_counters[var_prefix] -= 1
 
     def get_code_self(self):
 
@@ -282,6 +350,9 @@ class CodeGenerator(object):
         Walk parents if needed.
         """
 
+        if not self._check_existence():  # target does not exist
+            raise Exception("Target object does not exist")
+
         if self.code_var_name is None:
             # parent/s code is not inited
             code_parents = self.code_parents[:]
@@ -292,9 +363,9 @@ class CodeGenerator(object):
                     p_code_self = p.get_code_self()
                     p_close_code = p.get_code_close()
                     if p_code_self or p_close_code:
-                        parent_snippet = CodeSnippet(init_code=p_code_self,
+                        parent_snippet = CodeSnippet(p,
+                                                     init_code=p_code_self,
                                                      close_code=p_close_code)
-                        p.code_snippet = parent_snippet
                         self.code_manager.add(parent_snippet)
 
             own_code_self = self.get_code_self()
@@ -303,28 +374,57 @@ class CodeGenerator(object):
             own_code_action = self.get_code_action(action) if action else ''
 
             if own_code_self or own_close_code or own_code_action:
-                own_snippet = CodeSnippet(init_code=own_code_self,
+                own_snippet = CodeSnippet(self,
+                                          init_code=own_code_self,
                                           action_code=own_code_action,
                                           close_code=own_close_code)
-                self.code_snippet = own_snippet
                 self.code_manager.add(own_snippet)
         else:
             # Already inited (all parents too), may use get_code_action
             own_code_action = self.get_code_action(action) if action else ''
             if own_code_action:
-                new_action_snippet = CodeSnippet(action_code=own_code_action)
+                new_action_snippet = CodeSnippet(self,
+                                                 action_code=own_code_action)
                 self.code_manager.add(new_action_snippet)
 
         return self.code_manager.get_full_code()
 
+    def update_code_style(self):
+
+        """
+        Seeks for the first INIT snippet and update
+        `init_code` and `close_code`.
+        """
+
+        init_code_snippet = self.code_manager.get_init_snippet(self)
+        if init_code_snippet:
+            own_code_self = self.get_code_self()
+            own_close_code = self.get_code_close()
+            if own_code_self or own_close_code:
+                init_code_snippet.update(init_code=own_code_self,
+                                         close_code=own_close_code)
+
+    def release_variable(self):
+
+        """
+        Clear the access variable to mark the object is not inited and
+        make possible other use the variable name.
+        """
+
+        if self.code_var_name:
+            self.code_var_name = None
+            self.decrement_code_id(self.code_var_pattern)
+
 
 if __name__ == '__main__':
-    c1 = CodeSnippet('with Start_ as app:', 'frame1 = app.Frame', '', True)
-    c2 = CodeSnippet('button1 = frame1.button', 'button1.Click()',
+    c1 = CodeSnippet(None, 'with Start_ as app:', 'frame1 = app.Frame', '',
+                     True)
+    c2 = CodeSnippet(None, 'button1 = frame1.button', 'button1.Click()',
                      'del button1')
-    c3 = CodeSnippet('button2 = frame1.button', 'button2.Click()')
-    c4 = CodeSnippet('with Start_ as app:', 'frame2 = app.Frame', '', True)
-    c5 = CodeSnippet('', 'button1.Click()')
+    c3 = CodeSnippet(None, 'button2 = frame1.button', 'button2.Click()')
+    c4 = CodeSnippet(None, 'with Start_ as app:', 'frame2 = app.Frame', '',
+                     True)
+    c5 = CodeSnippet(None, '', 'button1.Click()')
     cm = CodeManager()
 
     print c1
