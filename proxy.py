@@ -499,7 +499,9 @@ class VirtualSWAPYObject(SWAPYObject):
     def _code_action(self):
         index = self.index
         if isinstance(index, unicode):
-            index = "'%s'" % index.encode('unicode-escape', 'replace')
+            index = "u'%s'" % index.encode('unicode-escape')
+        elif isinstance(index, str):
+            index = "'%s'" % index
         code = self.code_action_pattern.format(index=index,
                                                action="{action}",
                                                var="{var}",
@@ -1004,7 +1006,7 @@ class Pwa_listview(SWAPYObject):
 
 class listview_item(SWAPYObject):
 
-    code_self_patt_text = "{var} = {parent_var}.GetItem('{text}')"
+    code_self_patt_text = "{var} = {parent_var}.GetItem({text})"
     code_self_patt_index = "{var} = {parent_var}.GetItem({index}, {col_index})"
     short_name = 'listview_item'
 
@@ -1019,6 +1021,10 @@ class listview_item(SWAPYObject):
                                                     parent_var="{parent_var}",
                                                     var="{var}")
         else:
+            if isinstance(text, unicode):
+                text = "u'%s'" % text.encode('unicode-escape')
+            elif isinstance(text, str):
+                text = "'%s'" % text
             code = self.code_self_patt_text.format(text=text,
                                                    parent_var="{parent_var}",
                                                    var="{var}")
@@ -1130,8 +1136,11 @@ class Pwa_toolbar_button(SWAPYObject):
             index = self.pwa_obj.index
         else:
             index = text
+
         if isinstance(index, unicode):
-            index = "'%s'" % index.encode('unicode-escape', 'replace')
+            index = "u'%s'" % index.encode('unicode-escape')
+        elif isinstance(index, str):
+            index = "'%s'" % index
 
         code = self.code_self_pattern.format(index=index,
                                              action="{action}",
@@ -1223,11 +1232,10 @@ class Pwa_tree_item(SWAPYObject):
         path = self.path
         for i in range(len(path)):
             if isinstance(path[i], unicode):
-                path[i] = '%s' % path[i].encode('unicode-escape', 'replace')
+                path[i] = u'%s' % path[i].encode('unicode-escape')
 
-        code = self.code_self_pattern.format(path=path,
-                                             var="{var}",
-                                             main_parent_var="{main_parent_var}")
+        code = self.code_self_pattern.format(
+            path=path, var="{var}", main_parent_var="{main_parent_var}")
         return code
 
     def _get_properties(self):
