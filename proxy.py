@@ -267,7 +267,7 @@ class PwaWrapper(object):
         pwa_type = self._get_pywinobj_type(pwa_obj)
         #print pwa_type
         if pwa_type == 'window':
-            process = Process(self)
+            process = Process(self, pwa_obj.ProcessID())
             return Pwa_window(pwa_obj, process)
         if pwa_type == 'menu':
             return Pwa_menu(pwa_obj, self)
@@ -632,10 +632,24 @@ class Process(CodeGenerator):
     It will never be shown in the object browser. Used to hold 'app' counter
     independent of 'window' counters.
     """
+    processes = {}
+    inited = False
+    main_window = None
 
-    def __init__(self, parent):
-        self.parent = parent
-        self._var_name = None
+    def __new__(cls, parent, pid):
+        if pid in cls.processes:
+            return cls.processes[pid]
+        else:
+            new_process = super(Process, cls).__new__(cls, parent, pid)
+            cls.processes[pid] = new_process
+            return new_process
+
+    def __init__(self, parent, pid):
+        if not self.inited:
+            self.parent = parent
+            self._var_name = None
+
+        self.inited = True
 
     @property
     def _code_self(self):
@@ -665,11 +679,26 @@ class Pwa_window(SWAPYObject):
     code_self_close = "{parent_var}.Kill_()"
     short_name = 'window'
 
+    handles = {}
+    inited = False
+
+    def __new__(cls, pwa_obj, parent=None):
+        if pwa_obj.handle in cls.handles:
+            return cls.handles[pwa_obj.handle]
+        else:
+            new_window = super(Pwa_window, cls).__new__(cls, pwa_obj,
+                                                        parent=None)
+            cls.handles[pwa_obj.handle] = new_window
+            return new_window
+
     def __init__(self, *args, **kwargs):
-        # Set default style
-        self.code_self_style = self.__code_self_start
-        self.code_close_style = self.__code_close_start
-        super(Pwa_window, self).__init__(*args, **kwargs)
+        if not self.inited:
+            # Set default style
+            self.code_self_style = self.__code_self_start
+            self.code_close_style = self.__code_close_start
+            super(Pwa_window, self).__init__(*args, **kwargs)
+
+        self.inited = True
 
     def __code_self_connect(self):
         title = self.pwa_obj.WindowText().encode('unicode-escape')
@@ -705,10 +734,18 @@ class Pwa_window(SWAPYObject):
         if not self._get_additional_properties()['Access names']:
             raise NotImplementedError
         else:
-            code += self.code_self_style()
+            is_main_window = bool(self.parent.main_window is None or
+                                  self.parent.main_window == self or
+                                  self.parent.main_window.code_var_name is None)
+
+            if is_main_window:
+                code += self.code_self_style()
+                self.parent.main_window = self
             code += super(Pwa_window, self)._code_self
-            if self.code_self_style == self.__code_self_start:
+            if is_main_window and \
+                    self.code_self_style == self.__code_self_start:
                 code += "\n{var}.Wait('ready')"
+                self.parent.main_window = self
 
         return code
 
@@ -718,8 +755,12 @@ class Pwa_window(SWAPYObject):
         """
         Rewrite default behavior.
         """
-
-        code = self.code_close_style()
+        code = ""
+        is_main_window = bool(self.parent.main_window is None or
+                                  self.parent.main_window == self or
+                                  self.parent.main_window.code_var_name is None)
+        if is_main_window:
+            code = self.code_close_style()
 
         return code
 
