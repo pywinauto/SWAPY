@@ -20,11 +20,32 @@
 
 #Boa:App:BoaApp
 
+import sys
+import traceback
 import wx
 
 import _mainframe
 
+
+def hook(exctype, value, tb):
+
+    """
+    Handle all unexpected exceptions. Show the msgbox then close main window.
+    """
+
+    frame = wx.GetApp().GetTopWindow()
+    traceback_text = ''.join(traceback.format_exception(exctype, value, tb, 5))
+    dlg = wx.MessageDialog(frame, traceback_text,
+                           'Error!', wx.OK | wx.ICON_ERROR)
+    dlg.ShowModal()
+    dlg.Destroy()
+    frame.Destroy()
+
+sys.excepthook = hook
+
+
 modules ={'_mainframe': [0, '', '_mainframe.py'], 'proxy': [0, '', 'proxy.py']}
+
 
 class BoaApp(wx.App):
     def OnInit(self):
@@ -34,10 +55,10 @@ class BoaApp(wx.App):
         self.SetTopWindow(self.main)
         return True
 
+
 def main():
     application = BoaApp(0)
     application.MainLoop()
-
 
 
 if __name__ == '__main__':
