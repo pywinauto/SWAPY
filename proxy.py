@@ -378,7 +378,7 @@ class SWAPYObject(PwaWrapper, CodeGenerator):
     """
 
     code_self_pattern_attr = "{var} = {parent_var}.{access_name}"
-    code_self_pattern_item = "{var} = {parent_var}['{access_name}']"
+    code_self_pattern_item = "{var} = {parent_var}[{access_name}]"
     code_action_pattern = "{var}.{action}()"
     main_parent_type = None
     short_name = 'control'
@@ -416,17 +416,21 @@ class SWAPYObject(PwaWrapper, CodeGenerator):
         """
         #print self._get_additional_properties()
         access_name = self.GetProperties()['Access names'][0]
+
         if check_valid_identifier(access_name):
             # A valid identifier
-            code = self.code_self_pattern_attr.format(access_name=access_name,
-                                                      parent_var="{parent_var}",
-                                                      var="{var}")
+            code = self.code_self_pattern_attr.format(
+                access_name=access_name, parent_var="{parent_var}",
+                var="{var}")
         else:
             #Not valid, encode and use as app's item.
-            access_name = access_name.encode('unicode-escape', 'replace')
-            code = self.code_self_pattern_item.format(access_name=access_name,
-                                                      parent_var="{parent_var}",
-                                                      var="{var}")
+            if isinstance(access_name, unicode):
+                access_name = "u'%s'" % access_name.encode('unicode-escape')
+            elif isinstance(access_name, str):
+                access_name = "'%s'" % access_name
+            code = self.code_self_pattern_item.format(
+                access_name=access_name, parent_var="{parent_var}",
+                var="{var}")
         return code
 
     @property
@@ -915,10 +919,10 @@ class Pwa_menu_item(Pwa_menu):
 
     @property
     def _code_self(self):
-        menu_path = self.get_menuitems_path().encode('unicode-escape', 'replace')
-        code = self.code_self_pattern.format(menu_path=menu_path,
-                                             main_parent_var="{main_parent_var}",
-                                             var="{var}")
+        menu_path = self.get_menuitems_path().encode('unicode-escape')
+        code = self.code_self_pattern.format(
+            menu_path=menu_path, main_parent_var="{main_parent_var}",
+            var="{var}")
         return code
 
     def _check_actionable(self):
@@ -1119,7 +1123,7 @@ class virtual_tab_item(VirtualSWAPYObject):
     def _code_action(self):
         index = self.parent.pwa_obj.GetTabText(self.index)
         if isinstance(index, unicode):
-            index = "'%s'" % index.encode('unicode-escape', 'replace')
+            index = "u'%s'" % index.encode('unicode-escape')
         code = self.code_action_pattern.format(index=index,
                                                action="{action}",
                                                var="{var}",
