@@ -141,9 +141,9 @@ class EmptyTextsTestCases(BaseTestCase):
         expected_code = \
             "from pywinauto.application import Application\n\n" \
             "app = Application().Start(cmd_line=u'{app_path}')\n" \
-            "{win_ident} = app['RowList Sample Application']\n" \
+            "{win_ident} = app[u'RowList Sample Application']\n" \
             "{win_ident}.Wait('ready')\n" \
-            "toolbarwindow = {win_ident}['4']\n" \
+            "toolbarwindow = {win_ident}[u'4']\n" \
             "toolbar_button = toolbarwindow.Button(9)\n" \
             "toolbar_button.Click()\n\n" \
             "app.Kill_()"
@@ -402,9 +402,9 @@ class ControlsCodeTestCases(BaseTestCase):
         expected_code = \
             "from pywinauto.application import Application\n\n" \
             "app = Application().Start(cmd_line=u'{app_path}')\n" \
-            "{win_ident} = app['RowList Sample Application']\n" \
+            "{win_ident} = app[u'RowList Sample Application']\n" \
             "{win_ident}.Wait('ready')\n" \
-            "syslistview = {win_ident}['1']\n" \
+            "syslistview = {win_ident}[u'1']\n" \
             "listview_item = syslistview.GetItem(u'Gray')\n" \
             "listview_item.Click()\n\n" \
             "app.Kill_()"
@@ -443,7 +443,7 @@ class ControlsCodeTestCases(BaseTestCase):
             "window = app.Dialog\n" \
             "window.Wait('ready')\n" \
             "systabcontrol = window.TabControl\n" \
-            "systabcontrol.Select('CTreeCtrl')\n\n" \
+            "systabcontrol.Select(u'CTreeCtrl')\n\n" \
             "app.Kill_()"
 
         path = (u'Common Controls Sample',
