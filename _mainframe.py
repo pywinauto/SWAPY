@@ -253,20 +253,15 @@ class Frame1(wx.Frame):
         elif 'Copy value' == const.PROPERTIES_ACTIONS[menu_id]:
             #value = self.listCtrl_Properties.GetItem(item,1).GetText()
             key = self.listCtrl_Properties.GetItem(item,0).GetText()
-            try:
-                value_str = str(PROPERTIES[key])
-            except exceptions.UnicodeEncodeError:
-                value_str = PROPERTIES[key].encode(
-                    locale.getpreferredencoding(), 'replace')
-            clipdata.SetText(value_str)
+            value_text = proxy.object_to_text(PROPERTIES[key])
+
+            clipdata.SetText(value_text)
 
         elif 'Copy unicode value' == const.PROPERTIES_ACTIONS[menu_id]:
             key = self.listCtrl_Properties.GetItem(item,0).GetText()
-            try:
-                value_unicode_escape = str(PROPERTIES[key])
-            except exceptions.UnicodeEncodeError:
-                value_unicode_escape = PROPERTIES[key].encode('unicode-escape',
-                                                              'replace')
+            value_unicode_escape = proxy.object_to_text(PROPERTIES[key]).encode('unicode-escape',
+                                                                                'replace')
+
             clipdata.SetText(value_unicode_escape)
         else:
             raise RuntimeError("Unknown menu_id=%s for properties "
@@ -401,13 +396,9 @@ class prop_viewer_updater(object):
             self.listctrl.DeleteAllItems()
             for p_name in param_names:
                 p_name_str = str(p_name)
-                try:
-                    p_values_str = str(PROPERTIES[p_name])
-                except exceptions.UnicodeEncodeError:
-                    p_values_str = PROPERTIES[p_name].encode(
-                        locale.getpreferredencoding(), 'replace')
+                param_text = proxy.object_to_text(PROPERTIES[p_name])
                 index = self.listctrl.InsertStringItem(0, p_name_str)
-                self.listctrl.SetStringItem(index, 1, p_values_str)
+                self.listctrl.SetStringItem(index, 1, param_text)
             self.queue = []
             self.updating = False
         
@@ -439,10 +430,11 @@ class tree_updater(object):
         for i_name, i_obj in subitems:
           item_data = wx.TreeItemData()
           item_data.SetData(i_obj)
-          try:
-              i_name_str = str(i_name)
-          except exceptions.UnicodeEncodeError:
-              i_name_str = i_name.encode(locale.getpreferredencoding(), 'replace')
+          # try:
+          #     i_name_str = str(i_name)
+          # except exceptions.UnicodeEncodeError:
+          #     i_name_str = i_name.encode(locale.getpreferredencoding(), 'replace')
+          i_name_str = i_name
 
           try:
             item_id = self.treectrl.AppendItem(tree_item, i_name_str, data=item_data)
