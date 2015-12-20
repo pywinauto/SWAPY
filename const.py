@@ -63,4 +63,4 @@ EDITOR_ACTIONS = {401: 'Clear last command',
                   406: None,
                   407: 'Save code to file'}
             
-VERSION = '0.4.6'
+VERSION = '0.4.7'

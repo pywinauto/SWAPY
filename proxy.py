@@ -55,6 +55,32 @@ def resource_path(filename):
     return filename
 
 
+def object_to_text(obj):
+    """
+    Convert any object to srting or unicode.
+
+    The problem details:
+    https://bugs.python.org/issue5876
+    https://github.com/pywinauto/SWAPY/issues/78
+    """
+    # TODO: it's time to upgrade to Python 3!
+
+    if isinstance(obj, basestring):
+        # do not convert if string or unicode
+        obj_text = obj
+    else:
+        # list, set, object or something else
+        try:
+            obj_text = str(obj)
+        except exceptions.UnicodeEncodeError:
+            # convert items manually.
+
+            # a dict values lost in this case
+            obj_text = str([unicode(item) for item in obj])
+
+    return obj_text
+
+
 class PwaWrapper(object):
 
     """
