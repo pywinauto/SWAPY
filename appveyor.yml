@@ -28,6 +28,8 @@ install:
   #- ECHO "Notepad location "
   #- ps: "ls C:\\Windows\\System32\\notepad.exe"
 
+   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-desktop.ps1'))
+
    - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
    # Install the build dependencies of the project.
@@ -64,3 +66,8 @@ build_script:
 artifacts:
   # Archive the generated coverage report in the ci.appveyor.com build report.
   - path: swapy*.exe
+    name: binaries
+
+on_failure:
+  - "7z a screenshots.zip scr*.jpg"
+  - "appveyor PushArtifact screenshots.zip"

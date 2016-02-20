@@ -189,9 +189,12 @@ class CodeManager(object):
         # Add the close_code codes.
         # Reverse the list for a close_code from the first snippet was passed
         # at the end of the code.
-        full_code = "\n".join(lines)
-        full_code += 2*"\n"
-        full_code += "\n".join(endings[::-1])
+        if lines:
+            full_code = "\n".join(lines)
+            full_code += 2*"\n"
+            full_code += "\n".join(endings[::-1])
+        else:
+            full_code = ""
         return full_code
 
     def get_init_snippet(self, owner):
