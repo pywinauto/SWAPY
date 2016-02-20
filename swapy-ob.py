@@ -25,6 +25,7 @@ import traceback
 import wx
 
 import _mainframe
+import tools
 
 
 def hook(exctype, value, tb):
@@ -32,16 +33,13 @@ def hook(exctype, value, tb):
     """
     Handle all unexpected exceptions. Show the msgbox then close main window.
     """
-
-    frame = wx.GetApp().GetTopWindow()
     traceback_text = ''.join(traceback.format_exception(exctype, value, tb, 5))
-    dlg = wx.MessageDialog(frame, traceback_text,
-                           'Error!', wx.OK | wx.ICON_ERROR)
-    dlg.ShowModal()
-    dlg.Destroy()
-    frame.Destroy()
+    tools.show_error_message('ERROR', traceback_text)
 
-sys.excepthook = hook
+
+if not __debug__:
+    # Catch all unhandled exceptions and show the details in a msgbox.
+    sys.excepthook = hook
 
 
 modules ={'_mainframe': [0, '', '_mainframe.py'], 'proxy': [0, '', 'proxy.py']}
