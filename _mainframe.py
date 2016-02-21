@@ -21,8 +21,6 @@
 #Boa:Frame:MainFrame
 
 import const
-import exceptions
-import locale
 import platform
 import thread
 import traceback
@@ -254,13 +252,13 @@ class Frame1(wx.Frame):
         elif 'Copy value' == const.PROPERTIES_ACTIONS[menu_id]:
             #value = self.listCtrl_Properties.GetItem(item,1).GetText()
             key = self.listCtrl_Properties.GetItem(item,0).GetText()
-            value_text = proxy.object_to_text(PROPERTIES[key])
+            value_text = tools.object_to_text(PROPERTIES[key])
 
             clipdata.SetText(value_text)
 
         elif 'Copy unicode value' == const.PROPERTIES_ACTIONS[menu_id]:
             key = self.listCtrl_Properties.GetItem(item,0).GetText()
-            value_unicode_escape = proxy.object_to_text(PROPERTIES[key]).encode('unicode-escape',
+            value_unicode_escape = tools.object_to_text(PROPERTIES[key]).encode('unicode-escape',
                                                                                 'replace')
 
             clipdata.SetText(value_unicode_escape)
@@ -393,7 +391,7 @@ class prop_viewer_updater(object):
             self.listctrl.DeleteAllItems()
             for p_name in param_names:
                 p_name_str = str(p_name)
-                param_text = proxy.object_to_text(PROPERTIES[p_name])
+                param_text = tools.object_to_text(PROPERTIES[p_name])
                 index = self.listctrl.InsertStringItem(0, p_name_str)
                 self.listctrl.SetStringItem(index, 1, param_text)
             self.queue = []
