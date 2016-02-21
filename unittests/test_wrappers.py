@@ -30,10 +30,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_window(self):
         with test_app("CmnCtrl1.exe") as (app, app_path):
             obj = app.Dialog
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_window))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.application.WindowSpecification))
@@ -41,10 +41,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_menu(self):
         with test_app("BCDialogMenu.exe") as (app, app_path):
             obj = app.Dialog.Menu()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_menu))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.menuwrapper.Menu))
@@ -52,7 +52,7 @@ class WrappersTestCase(unittest.TestCase):
     def test_menu_item(self):
         with test_app("BCDialogMenu.exe") as (app, app_path):
             obj = app.Dialog.MenuItem(u'&File')
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_menu_item))
         self.assertTrue(issubclass(wrapper.__class__, proxy.Pwa_menu))
@@ -63,11 +63,11 @@ class WrappersTestCase(unittest.TestCase):
     def test_combobox(self):
         with test_app("CmnCtrl3.exe") as (app, app_path):
             obj = app.Dialog.ComboBox.Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
             print(wrapper, proxy.Pwa_combobox)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_combobox))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.win32_controls.ComboBoxWrapper))
@@ -76,10 +76,10 @@ class WrappersTestCase(unittest.TestCase):
         with test_app("CmnCtrl3.exe") as (app, app_path):
             app.Dialog.TabControl.Select('CSplitButton')  # open needed tab
             obj = app.Dialog.ListBox.Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_listbox))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.win32_controls.ListBoxWrapper))
@@ -87,10 +87,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_listview(self):
         with test_app("RowList.exe") as (app, app_path):
             obj = app[u'RowList Sample Application'][u'1'].Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_listview))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.common_controls.ListViewWrapper))
@@ -98,10 +98,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_tab(self):
         with test_app("CmnCtrl1.exe") as (app, app_path):
             obj = app.Dialog.TabControl.Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_tab))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.common_controls.TabControlWrapper))
@@ -109,10 +109,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_toolbar(self):
         with test_app("RowList.exe") as (app, app_path):
             obj = app[u'RowList Sample Application'][u'4'].Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_toolbar))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.common_controls.ToolbarWrapper))
@@ -120,10 +120,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_toolbar_button(self):
         with test_app("RowList.exe") as (app, app_path):
             obj = app[u'RowList Sample Application'][u'4'].Button(0)
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_toolbar_button))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.common_controls._toolbar_button))
@@ -131,10 +131,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_tree_view(self):
         with test_app("CmnCtrl1.exe") as (app, app_path):
             obj = app.Dialog.TreeView.Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_tree))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.common_controls.TreeViewWrapper))
@@ -142,10 +142,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_tree_item(self):
         with test_app("CmnCtrl1.exe") as (app, app_path):
             obj = app.Dialog.TreeView.GetItem([u'Birds'])
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
         self.assertTrue(isinstance(wrapper, proxy.Pwa_tree_item))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.common_controls._treeview_element))
@@ -153,10 +153,10 @@ class WrappersTestCase(unittest.TestCase):
     def test_unknown(self):
         with test_app("CmnCtrl1.exe") as (app, app_path):
             obj = app.Dialog[u'#32770'].Click()
-            _ = proxy.PwaWrapper(None)
+            _ = proxy.NativeObject(None)
             wrapper = _._get_swapy_object(obj)
-        self.assertTrue(isinstance(wrapper, proxy.SWAPYObject))
-        self.assertTrue(issubclass(wrapper.__class__, proxy.PwaWrapper))
+        self.assertTrue(isinstance(wrapper, proxy.NativeObject))
+        self.assertTrue(issubclass(wrapper.__class__, proxy.SWAPYWrapper))
         self.assertTrue(isinstance(
                 wrapper.pwa_obj,
                 pywinauto.controls.HwndWrapper.HwndWrapper))
