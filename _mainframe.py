@@ -1,5 +1,5 @@
 # GUI object/properties browser. 
-# Copyright (C) 2011 Matiychuk D.
+# Copyright (C) 2016 Matiychuk D.
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public License
@@ -20,13 +20,15 @@
 
 #Boa:Frame:MainFrame
 
-import const
+
 import platform
 import thread
 import traceback
+
 import wx
 
 import code_manager
+import const
 import proxy
 import tools
 
@@ -56,7 +58,7 @@ class Frame1(wx.Frame):
               title='SWAPY - Simple Windows Automation on Python v. %s. pywinauto v. %s. %s' % (const.VERSION,
                                                                                                 proxy.pywinauto.__version__,
                                                                                                 platform.architecture()[0]))
-        self.SetIcon(wx.Icon(proxy.resource_path("swapy_dog_head.ico"),
+        self.SetIcon(wx.Icon(tools.resource_path("swapy_dog_head.ico"),
               wx.BITMAP_TYPE_ICO))
               
         self.Bind(wx.EVT_MENU, self.menu_action) # - make action
@@ -147,7 +149,7 @@ class Frame1(wx.Frame):
           obj = self.treeCtrl_ObjectsBrowser.GetItemData(tree_item).GetData()
         self.prop_updater.props_update(obj)
         self.tree_updater.tree_update(tree_item, obj)
-        obj.Highlight_control()
+        obj.highlight_control()
                     
     def ObjectsBrowserRightClick(self, event):
         menu = wx.Menu()
@@ -157,8 +159,8 @@ class Frame1(wx.Frame):
         self.GLOB_last_rclick_tree_obj = obj
         #self.treeCtrl_ObjectsBrowser.SelectItem(tree_item)
         if obj._check_existence():       
-            actions = obj.Get_actions()
-            extended_actions = obj.Get_extended_actions()
+            actions = obj.get_actions()
+            extended_actions = obj.get_extended_actions()
             if not actions and not extended_actions:
                 menu.Append(0, 'No actions')
                 menu.Enable(0, False)
@@ -279,7 +281,7 @@ class Frame1(wx.Frame):
             action = const.ACTIONS[menu_id]
             try:
                 code = obj.Get_code(action)
-                obj.Exec_action(action)
+                obj.execute_action(action)
             except:
                 code = None
                 traceback_info = traceback.format_exc(5)
@@ -348,7 +350,7 @@ class Frame1(wx.Frame):
         item_data = wx.TreeItemData()
         root_obj = proxy.PC_system(None)
         item_data.SetData(root_obj)
-        self.treeCtrl_ObjectsBrowser.AddRoot(root_obj.GetProperties()['PC name'], data = item_data)
+        self.treeCtrl_ObjectsBrowser.AddRoot(root_obj.get_properties()['PC name'], data = item_data)
         #self.treeCtrl_ObjectsBrowser.AddRoot('PC name')
         del item_data
         #the_root = self.treeCtrl_ObjectsBrowser.GetRootItem()
@@ -376,7 +378,7 @@ class prop_viewer_updater(object):
         self.listctrl.SetStringItem(index, 1, '')
         global PROPERTIES
         try:
-            PROPERTIES = obj.GetProperties()
+            PROPERTIES = obj.get_properties()
         except:
             PROPERTIES = {}
             dlg = wx.MessageDialog(self.listctrl, traceback.format_exc(5),
@@ -421,7 +423,7 @@ class tree_updater(object):
         self.updating = True
         tree_item, obj = self.queue[-1]
         self.treectrl.DeleteChildren(tree_item)
-        subitems = obj.Get_subitems()
+        subitems = obj.get_subitems()
         for i_name, i_obj in subitems:
           item_data = wx.TreeItemData()
           item_data.SetData(i_obj)
