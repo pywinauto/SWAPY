@@ -62,7 +62,7 @@ class BaseTestCase(unittest.TestCase):
 
         proxy_object = self.pwa_root
         for target_sub in path:
-            subitems = proxy_object.Get_subitems()
+            subitems = proxy_object.get_subitems()
             if not subitems:
                 raise RuntimeError("'%s' cannot be found" % target_sub)
             for name, pwa_object in subitems:

@@ -22,7 +22,10 @@
 
 
 import exceptions
+import os.path
+import sys
 import traceback
+
 import wx
 
 
@@ -79,3 +82,23 @@ def object_to_text(obj):
             obj_text = str([unicode(item) for item in obj])
 
     return obj_text
+
+
+def resource_path(filename):
+    """
+    Compose a resource path.
+
+    Depending of the run type:
+    - PyInstaller version >= 1.6
+    - PyInstaller version < 1.6
+    - direct run
+    """
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller >= 1.6
+        filename = os.path.join(sys._MEIPASS, filename)
+    elif '_MEIPASS2' in os.environ:
+        # PyInstaller < 1.6 (tested on 1.5 only)
+        filename = os.path.join(os.environ['_MEIPASS2'], filename)
+    else:
+        filename = os.path.join(os.path.dirname(sys.argv[0]), filename)
+    return filename
